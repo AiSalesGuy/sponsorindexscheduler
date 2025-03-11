@@ -130,6 +130,7 @@
                     
                     data.data.forEach(schedule => {
                         const row = document.createElement('tr');
+                        const sponsorIndexUrl = `https://sponsorindex.com/${schedule.url_slug}`;
                         row.innerHTML = `
                             <td>${schedule.date}</td>
                             <td>${schedule.time_12_hour}</td>
@@ -137,7 +138,7 @@
                             <td>${schedule.email}</td>
                             <td>$${schedule.budget.toLocaleString()}</td>
                             <td>${schedule.campaign_goals}</td>
-                            <td><a href="${schedule.url_slug}" target="_blank">${schedule.url_slug}</a></td>
+                            <td><a href="${sponsorIndexUrl}" target="_blank">${sponsorIndexUrl}</a></td>
                         `;
                         tbody.appendChild(row);
                     });
