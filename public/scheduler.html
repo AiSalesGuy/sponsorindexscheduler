@@ -335,7 +335,7 @@
             formData.budget = document.getElementById('budget').value;
             formData.campaignGoals = document.getElementById('campaignGoals').value;
 
-            // Get the URL path after /top-newsletters/
+            // Get the newsletter name from the URL path
             try {
                 let url;
                 if (window.parent !== window) {
@@ -344,22 +344,25 @@
                     url = new URL(window.location.href);
                 }
                 
-                // Extract the path after /top-newsletters/
+                // Get just the path part (e.g., /top-newsletters/superhuman)
                 const path = url.pathname;
+                console.log('Full URL path:', path);
+                
+                // Extract just the newsletter name after /top-newsletters/
                 const match = path.match(/\/top-newsletters\/([^\/]+)/);
                 if (match && match[1]) {
                     formData.urlSlug = match[1];
                     console.log('Extracted newsletter name:', formData.urlSlug);
                 } else {
                     formData.urlSlug = 'direct_access';
-                    console.log('No newsletter name found in URL');
+                    console.log('No newsletter name found in path');
                 }
             } catch (e) {
                 console.log('Error processing URL:', e);
                 formData.urlSlug = 'direct_access';
             }
 
-            console.log('Submitting form with URL slug:', formData.urlSlug);
+            console.log('Submitting form with newsletter name:', formData.urlSlug);
             
             try {
                 const response = await fetch('https://sponsorindexscheduler-2.onrender.com/api/schedule', {
