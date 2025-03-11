@@ -20,8 +20,8 @@ app.use((req, res, next) => {
 });
 
 // PostgreSQL connection configuration
-console.log('Database URL:', process.env.DATABASE_URL);
-console.log('Postgres URL:', process.env.POSTGRES_URL);
+console.log('Database URL:', process.env.DATABASE_URL ? 'Set' : 'Not set');
+console.log('Postgres URL:', process.env.POSTGRES_URL ? 'Set' : 'Not set');
 
 const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL;
 if (!connectionString) {
@@ -32,20 +32,37 @@ if (!connectionString) {
 console.log('Using connection string:', connectionString.replace(/:[^:@]+@/, ':****@')); // Log URL with password hidden
 
 const pool = new Pool({
-    connectionString: connectionString,
+    connectionString,
     ssl: {
-        rejectUnauthorized: false
+        rejectUnauthorized: false,
+        sslmode: 'require'
+    },
+    max: 20, // Maximum number of clients in the pool
+    idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
+    connectionTimeoutMillis: 10000 // Return an error after 10 seconds if connection could not be established
+});
+
+// Add more detailed connection logging
+pool.on('connect', (client) => {
+    console.log('New client connected to PostgreSQL database');
+    client.on('error', (err) => {
+        console.error('Database client error:', err);
+    });
+});
+
+pool.on('error', (err, client) => {
+    console.error('Unexpected error on idle client', err);
+    if (client) {
+        client.release(true); // Force release with error
     }
 });
 
-// Test database connection
-pool.on('connect', () => {
-    console.log('Connected to PostgreSQL database');
+pool.on('acquire', () => {
+    console.log('Client acquired from pool');
 });
 
-pool.on('error', (err) => {
-    console.error('Unexpected error on idle client', err);
-    process.exit(-1);
+pool.on('remove', () => {
+    console.log('Client removed from pool');
 });
 
 // Initialize database table
