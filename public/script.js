@@ -23,28 +23,37 @@ let formData = {
     urlSlug: ""
 };
 
-// Generate URL slug from the current page URL
+// Generate URL slug from the referrer URL
 function generateUrlSlug() {
-    // Get the current URL
-    const currentUrl = window.location.href;
+    // Try to get the referrer URL first
+    const referrer = document.referrer;
+    console.log('Referrer URL:', referrer);
     
-    // Extract the path from the URL
-    const urlObject = new URL(currentUrl);
-    const pathSegments = urlObject.pathname.split('/').filter(segment => segment);
-    
-    // If we have path segments, use the last one
-    if (pathSegments.length > 0) {
-        return pathSegments[pathSegments.length - 1];
+    if (referrer && referrer.includes('sponsorindex.com')) {
+        try {
+            const referrerUrl = new URL(referrer);
+            const pathSegments = referrerUrl.pathname.split('/').filter(segment => segment);
+            
+            // Check if this is a newsletter page
+            if (pathSegments.length >= 2 && pathSegments[0] === 'top-newsletters') {
+                console.log('Found newsletter slug:', pathSegments[1]);
+                return pathSegments[1];
+            }
+        } catch (error) {
+            console.error('Error parsing referrer URL:', error);
+        }
     }
     
-    // If no path segments, use the hostname without the subdomain
-    const hostParts = urlObject.hostname.split('.');
-    if (hostParts.length >= 2) {
-        return hostParts[0];
+    // If no valid referrer, check URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const newsletterSlug = urlParams.get('newsletter');
+    if (newsletterSlug) {
+        console.log('Found newsletter slug from URL params:', newsletterSlug);
+        return newsletterSlug;
     }
     
-    // Fallback: use a timestamp-based slug
-    return `newsletter-${Date.now()}`;
+    console.warn('No valid newsletter slug found, using fallback');
+    return 'newsletter-' + Date.now();
 }
 
 // Set initial URL slug

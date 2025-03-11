@@ -172,8 +172,25 @@ app.post('/api/schedule', async (req, res) => {
         }
 
         // Clean and validate URL slug
-        const cleanUrlSlug = urlSlug ? urlSlug.trim() : '';
+        let cleanUrlSlug = urlSlug ? urlSlug.trim() : '';
         console.log('Processing URL slug:', urlSlug, 'Cleaned slug:', cleanUrlSlug);
+
+        // If the slug contains a full URL, extract just the newsletter name
+        if (cleanUrlSlug.includes('/')) {
+            try {
+                const urlParts = cleanUrlSlug.split('/');
+                // Find the part after 'top-newsletters'
+                const newsletterIndex = urlParts.indexOf('top-newsletters');
+                if (newsletterIndex !== -1 && urlParts[newsletterIndex + 1]) {
+                    cleanUrlSlug = urlParts[newsletterIndex + 1];
+                } else {
+                    // If we can't find it after 'top-newsletters', just take the last segment
+                    cleanUrlSlug = urlParts[urlParts.length - 1];
+                }
+            } catch (error) {
+                console.error('Error processing URL slug:', error);
+            }
+        }
 
         // Generate a fallback slug if none is provided
         const finalSlug = cleanUrlSlug || `newsletter-${Date.now()}`;
