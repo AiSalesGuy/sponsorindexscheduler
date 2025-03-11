@@ -52,11 +52,34 @@
             background-color: #efe;
             color: #0c0;
         }
+        .status.loading {
+            background-color: #f8f9fa;
+            color: #666;
+        }
+        .refresh-button {
+            padding: 8px 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+        .refresh-button:hover {
+            background-color: #0056b3;
+        }
+        .last-updated {
+            color: #666;
+            font-size: 0.9em;
+            margin-left: 10px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Scheduled Appointments</h1>
+        <button onclick="loadSchedules()" class="refresh-button">Refresh Data</button>
+        <span id="lastUpdated" class="last-updated"></span>
         <div id="status" class="status"></div>
         <table>
             <thead>
@@ -74,14 +97,35 @@
         </table>
     </div>
     <script>
+        function updateLastUpdated() {
+            const now = new Date();
+            document.getElementById('lastUpdated').textContent = 
+                `Last updated: ${now.toLocaleTimeString()}`;
+        }
+
         async function loadSchedules() {
+            const status = document.getElementById('status');
+            const tbody = document.getElementById('schedulesTable');
+            
             try {
+                status.className = 'status loading';
+                status.textContent = 'Loading schedules...';
+                
                 const response = await fetch('/api/schedules');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
                 const data = await response.json();
                 
                 if (data.success) {
-                    const tbody = document.getElementById('schedulesTable');
                     tbody.innerHTML = '';
+                    
+                    if (data.data.length === 0) {
+                        status.className = 'status';
+                        status.textContent = 'No appointments found';
+                        return;
+                    }
                     
                     data.data.forEach(schedule => {
                         const row = document.createElement('tr');
@@ -96,14 +140,17 @@
                         tbody.appendChild(row);
                     });
                     
-                    document.getElementById('status').className = 'status success';
-                    document.getElementById('status').textContent = `${data.data.length} appointments found`;
+                    status.className = 'status success';
+                    status.textContent = `${data.data.length} appointments found`;
+                    updateLastUpdated();
                 } else {
-                    throw new Error(data.error);
+                    throw new Error(data.error || 'Unknown error occurred');
                 }
             } catch (error) {
-                document.getElementById('status').className = 'status error';
-                document.getElementById('status').textContent = `Error loading schedules: ${error.message}`;
+                console.error('Error:', error);
+                status.className = 'status error';
+                status.textContent = `Error loading schedules: ${error.message}`;
+                tbody.innerHTML = '<tr><td colspan="6">Error loading data. Please try again.</td></tr>';
             }
         }
 

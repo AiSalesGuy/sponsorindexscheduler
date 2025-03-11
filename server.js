@@ -109,6 +109,26 @@ async function initializeDatabase() {
 })();
 
 // API Routes
+app.get('/api/schedules', async (req, res) => {
+    let client;
+    try {
+        client = await pool.connect();
+        const result = await client.query('SELECT * FROM schedules ORDER BY created_at DESC');
+        res.json({
+            success: true,
+            data: result.rows
+        });
+    } catch (error) {
+        console.error('Error fetching schedules:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    } finally {
+        if (client) client.release();
+    }
+});
+
 app.post('/api/schedule', async (req, res) => {
     console.log('Received scheduling request with body:', JSON.stringify(req.body, null, 2));
     console.log('Request headers:', req.headers);
@@ -232,11 +252,6 @@ app.get('/health', (req, res) => {
     });
 });
 
-// Serve the HTML file for all routes (SPA support)
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
 // Error handling middleware
 app.use((err, req, res, next) => {
     console.error(err.stack);
@@ -244,6 +259,11 @@ app.use((err, req, res, next) => {
         success: false,
         error: 'Something went wrong!'
     });
+});
+
+// Serve the HTML file for all routes (SPA support)
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // Start server
