@@ -9,8 +9,12 @@ const PORT = process.env.PORT || 10000;
 
 // Middleware
 app.use(cors({
-    // We'll update this with the Wix domain once deployed
-    origin: '*',
+    origin: [
+        'https://sponsorindex.com',
+        'https://www.sponsorindex.com',
+        'http://sponsorindex.com',
+        'http://www.sponsorindex.com'
+    ],
     methods: ['GET', 'POST'],
     credentials: true
 }));
