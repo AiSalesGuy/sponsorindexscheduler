@@ -145,18 +145,13 @@ document.getElementById('contactForm').addEventListener('submit', async function
         const response = await fetch('https://sponsorindexscheduler-2.onrender.com/api/schedule', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'Origin': window.location.origin
+                'Content-Type': 'application/json'
             },
-            mode: 'cors',
-            credentials: 'include',
             body: JSON.stringify(formData)
         });
 
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
 
         const result = await response.json();

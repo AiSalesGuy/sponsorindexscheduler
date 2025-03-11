@@ -7,29 +7,15 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// More permissive CORS configuration
-app.use(cors({
-    origin: true, // Allow all origins temporarily
-    methods: ['GET', 'POST', 'OPTIONS'],
-    credentials: true,
-    allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'Accept', 'X-Requested-With'],
-    exposedHeaders: ['Content-Range', 'X-Content-Range']
-}));
+// Simple CORS configuration
+app.use(cors());
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Handle preflight requests
-app.options('*', cors());
-
 // Security headers for iframe embedding
 app.use((req, res, next) => {
-    // Allow embedding in Wix
-    res.setHeader('X-Frame-Options', 'ALLOW-FROM https://www.sponsorindex.com');
-    res.setHeader('Content-Security-Policy', "frame-ancestors 'self' https://*.wix.com https://*.sponsorindex.com https://sponsorindex.com https://www.sponsorindex.com");
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Origin, Accept, X-Requested-With');
+    res.setHeader('Content-Security-Policy', "frame-ancestors *");
     next();
 });
 
