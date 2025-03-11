@@ -38,81 +38,75 @@ if (!databaseUrl && !postgresUrl) {
 const connectionString = databaseUrl || postgresUrl;
 console.log('Using connection string:', connectionString.replace(/:[^:@]+@/, ':****@')); // Log URL with password hidden
 
-// Create the connection pool with more detailed error handling
-try {
-    const pool = new Pool({
-        connectionString,
-        ssl: {
-            rejectUnauthorized: false
-        },
-        max: 20,
-        idleTimeoutMillis: 30000,
-        connectionTimeoutMillis: 10000
+// Create the connection pool
+const pool = new Pool({
+    connectionString,
+    ssl: {
+        rejectUnauthorized: false
+    },
+    max: 20,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 10000
+});
+
+// Add connection event handlers
+pool.on('connect', (client) => {
+    console.log('New client connected to PostgreSQL database');
+    client.on('error', (err) => {
+        console.error('Database client error:', err);
     });
+});
 
-    // Add connection event handlers
-    pool.on('connect', (client) => {
-        console.log('New client connected to PostgreSQL database');
-        client.on('error', (err) => {
-            console.error('Database client error:', err);
-        });
-    });
-
-    pool.on('error', (err, client) => {
-        console.error('Unexpected error on idle client:', err);
-        if (client) {
-            client.release(true);
-        }
-    });
-
-    // Test the connection immediately
-    (async () => {
-        try {
-            const client = await pool.connect();
-            console.log('Initial connection test successful');
-            client.release();
-        } catch (err) {
-            console.error('Initial connection test failed:', err);
-        }
-    })();
-
-    module.exports = { pool };
-} catch (err) {
-    console.error('Error creating connection pool:', err);
-    process.exit(1);
-}
+pool.on('error', (err, client) => {
+    console.error('Unexpected error on idle client:', err);
+    if (client) {
+        client.release(true);
+    }
+});
 
 // Initialize database table
 async function initializeDatabase() {
+    let client;
     try {
-        const client = await pool.connect();
-        try {
-            await client.query(`
-                CREATE TABLE IF NOT EXISTS schedules (
-                    id SERIAL PRIMARY KEY,
-                    date VARCHAR(10) NOT NULL,
-                    time VARCHAR(5) NOT NULL,
-                    time_12_hour VARCHAR(8) NOT NULL,
-                    name VARCHAR(100) NOT NULL,
-                    email VARCHAR(100) NOT NULL,
-                    budget INTEGER NOT NULL,
-                    campaign_goals TEXT NOT NULL,
-                    url_slug TEXT NOT NULL,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            `);
-            console.log('Database initialized successfully');
-        } finally {
-            client.release();
-        }
+        client = await pool.connect();
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS schedules (
+                id SERIAL PRIMARY KEY,
+                date VARCHAR(10) NOT NULL,
+                time VARCHAR(5) NOT NULL,
+                time_12_hour VARCHAR(8) NOT NULL,
+                name VARCHAR(100) NOT NULL,
+                email VARCHAR(100) NOT NULL,
+                budget INTEGER NOT NULL,
+                campaign_goals TEXT NOT NULL,
+                url_slug TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+        console.log('Database initialized successfully');
     } catch (error) {
         console.error('Error initializing database:', error);
-        // Don't exit the process, just log the error
+        if (error.code === '3D000') { // Database does not exist
+            console.error('Database does not exist. Please create it first.');
+        }
+    } finally {
+        if (client) {
+            client.release();
+        }
     }
 }
 
-// Initialize database on startup
-initializeDatabase().catch(console.error);
+// Test the connection and initialize database
+(async () => {
+    try {
+        const client = await pool.connect();
+        console.log('Initial connection test successful');
+        client.release();
+        await initializeDatabase();
+    } catch (err) {
+        console.error('Initial connection test failed:', err);
+    }
+})();
 
 // API Routes
 app.post('/api/schedule', async (req, res) => {
