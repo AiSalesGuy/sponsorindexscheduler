@@ -23,17 +23,35 @@ let formData = {
     urlSlug: ""
 };
 
-// Generate URL slug from the current path
+// Generate URL slug from the current page URL
 function generateUrlSlug() {
-    const pathSegments = window.location.pathname.split('/').filter(segment => segment);
+    // Get the current URL
+    const currentUrl = window.location.href;
+    
+    // Extract the path from the URL
+    const urlObject = new URL(currentUrl);
+    const pathSegments = urlObject.pathname.split('/').filter(segment => segment);
+    
+    // If we have path segments, use the last one
     if (pathSegments.length > 0) {
         return pathSegments[pathSegments.length - 1];
     }
-    return '';
+    
+    // If no path segments, use the hostname without the subdomain
+    const hostParts = urlObject.hostname.split('.');
+    if (hostParts.length >= 2) {
+        return hostParts[0];
+    }
+    
+    // Fallback: use a timestamp-based slug
+    return `newsletter-${Date.now()}`;
 }
 
 // Set initial URL slug
 formData.urlSlug = generateUrlSlug();
+
+// Log the URL slug for debugging
+console.log('Generated URL slug:', formData.urlSlug);
 
 // Generate time slots
 function generateTimeSlots() {

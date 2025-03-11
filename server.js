@@ -173,13 +173,11 @@ app.post('/api/schedule', async (req, res) => {
 
         // Clean and validate URL slug
         const cleanUrlSlug = urlSlug ? urlSlug.trim() : '';
-        if (!cleanUrlSlug) {
-            console.error('Invalid or missing URL slug');
-            return res.status(400).json({
-                success: false,
-                error: 'Invalid or missing URL slug'
-            });
-        }
+        console.log('Processing URL slug:', urlSlug, 'Cleaned slug:', cleanUrlSlug);
+
+        // Generate a fallback slug if none is provided
+        const finalSlug = cleanUrlSlug || `newsletter-${Date.now()}`;
+        console.log('Final URL slug to be used:', finalSlug);
 
         const query = `
             INSERT INTO schedules 
@@ -196,7 +194,7 @@ app.post('/api/schedule', async (req, res) => {
             email,
             parseInt(budget, 10),
             campaignGoals,
-            cleanUrlSlug
+            finalSlug
         ];
 
         console.log('Executing query with values:', JSON.stringify(values, null, 2));
