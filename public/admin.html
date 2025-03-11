@@ -90,6 +90,7 @@
                     <th>Email</th>
                     <th>Budget</th>
                     <th>Campaign Goals</th>
+                    <th>URL Path</th>
                 </tr>
             </thead>
             <tbody id="schedulesTable">
@@ -136,6 +137,7 @@
                             <td>${schedule.email}</td>
                             <td>$${schedule.budget.toLocaleString()}</td>
                             <td>${schedule.campaign_goals}</td>
+                            <td><a href="${schedule.url_slug}" target="_blank">${schedule.url_slug}</a></td>
                         `;
                         tbody.appendChild(row);
                     });
@@ -150,7 +152,7 @@
                 console.error('Error:', error);
                 status.className = 'status error';
                 status.textContent = `Error loading schedules: ${error.message}`;
-                tbody.innerHTML = '<tr><td colspan="6">Error loading data. Please try again.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7">Error loading data. Please try again.</td></tr>';
             }
         }
 
