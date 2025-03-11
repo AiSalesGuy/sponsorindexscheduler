@@ -409,53 +409,67 @@
             formData.budget = document.getElementById('budget').value;
             formData.campaignGoals = document.getElementById('campaignGoals').value;
 
-            // Get the newsletter name from the URL path
-            try {
-                let parentUrl = '';
-                if (window.parent !== window) {
-                    // We're in an iframe, get the parent window's URL
-                    try {
-                        parentUrl = window.parent.location.href;
-                        console.log('Parent window URL:', parentUrl);
-                    } catch (e) {
-                        console.error('Error accessing parent URL:', e);
-                        parentUrl = document.referrer;
-                        console.log('Using referrer URL instead:', parentUrl);
-                    }
-                } else {
-                    parentUrl = window.location.href;
-                    console.log('Direct window URL:', parentUrl);
+            // Functions to get page name from different sources
+            function getPageFromParams() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const pageSlug = urlParams.get('page');
+                console.log('URL parameters:', Object.fromEntries(urlParams.entries()));
+                return pageSlug;
+            }
+
+            function getPageFromReferrer() {
+                const referrer = document.referrer;
+                console.log('Referrer URL:', referrer);
+                
+                if (!referrer) {
+                    console.log('No referrer URL available');
+                    return null;
                 }
 
-                // Log the URL we're working with
-                console.log('Processing URL:', parentUrl);
+                try {
+                    const referrerUrl = new URL(referrer);
+                    console.log('Parsed referrer path:', referrerUrl.pathname);
+                    
+                    const match = referrerUrl.pathname.match(/\/top-newsletters\/([^/?#]+)/);
+                    if (match && match[1]) {
+                        return match[1];
+                    }
+                    console.log('No newsletter path found in referrer URL');
+                    return null;
+                } catch (e) {
+                    console.error('Error parsing referrer URL:', e);
+                    return null;
+                }
+            }
 
-                // Extract everything after /top-newsletters/
-                const match = parentUrl.match(/\/top-newsletters\/([^/?#]+)/);
+            // Try to get the page name from different sources
+            try {
+                console.log('Starting page name extraction process...');
                 
-                if (match && match[1]) {
-                    // Use the exact path component without any cleaning
-                    formData.urlSlug = match[1];
-                    console.log('Successfully extracted newsletter path:', formData.urlSlug);
+                // First try URL parameters
+                const pageFromParams = getPageFromParams();
+                if (pageFromParams) {
+                    formData.urlSlug = pageFromParams;
+                    console.log('Successfully got page name from URL parameters:', formData.urlSlug);
                 } else {
-                    console.warn('Could not find newsletter path in URL:', parentUrl);
-                    // Try to get the path from document.referrer as backup
-                    const referrerMatch = document.referrer.match(/\/top-newsletters\/([^/?#]+)/);
-                    if (referrerMatch && referrerMatch[1]) {
-                        formData.urlSlug = referrerMatch[1];
-                        console.log('Extracted newsletter path from referrer:', formData.urlSlug);
+                    console.log('No page name in URL parameters, trying referrer...');
+                    
+                    // Then try referrer
+                    const pageFromReferrer = getPageFromReferrer();
+                    if (pageFromReferrer) {
+                        formData.urlSlug = pageFromReferrer;
+                        console.log('Successfully got page name from referrer:', formData.urlSlug);
                     } else {
-                        console.error('No newsletter path found in URL or referrer');
-                        formData.urlSlug = '';
+                        console.log('Could not get page name from any source, using default');
+                        formData.urlSlug = 'direct_access';
                     }
                 }
             } catch (e) {
-                console.error('Error extracting newsletter path:', e);
-                formData.urlSlug = '';
+                console.error('Error in page name extraction process:', e);
+                formData.urlSlug = 'direct_access';
             }
 
-            // Log the final value being submitted
-            console.log('Final newsletter path being submitted:', formData.urlSlug);
+            console.log('Final form data being submitted:', formData);
             
             try {
                 const response = await fetch('https://sponsorindexscheduler-2.onrender.com/api/schedule', {
