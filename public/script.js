@@ -23,37 +23,19 @@ let formData = {
     urlSlug: ""
 };
 
-// Generate URL slug from the referrer URL
+// Generate URL slug from URL parameters
 function generateUrlSlug() {
-    // Try to get the referrer URL first
-    const referrer = document.referrer;
-    console.log('Referrer URL:', referrer);
-    
-    if (referrer && referrer.includes('sponsorindex.com')) {
-        try {
-            const referrerUrl = new URL(referrer);
-            const pathSegments = referrerUrl.pathname.split('/').filter(segment => segment);
-            
-            // Check if this is a newsletter page
-            if (pathSegments.length >= 2 && pathSegments[0] === 'top-newsletters') {
-                console.log('Found newsletter slug:', pathSegments[1]);
-                return pathSegments[1];
-            }
-        } catch (error) {
-            console.error('Error parsing referrer URL:', error);
-        }
-    }
-    
-    // If no valid referrer, check URL parameters
+    // Get the newsletter name from URL parameters
     const urlParams = new URLSearchParams(window.location.search);
-    const newsletterSlug = urlParams.get('newsletter');
-    if (newsletterSlug) {
-        console.log('Found newsletter slug from URL params:', newsletterSlug);
-        return newsletterSlug;
+    const newsletter = urlParams.get('newsletter');
+    
+    if (newsletter) {
+        console.log('Found newsletter name from URL params:', newsletter);
+        return newsletter;
     }
     
-    console.warn('No valid newsletter slug found, using fallback');
-    return 'newsletter-' + Date.now();
+    console.warn('No newsletter parameter found in URL');
+    return '';
 }
 
 // Set initial URL slug

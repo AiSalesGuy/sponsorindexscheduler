@@ -175,26 +175,14 @@ app.post('/api/schedule', async (req, res) => {
         let cleanUrlSlug = urlSlug ? urlSlug.trim() : '';
         console.log('Processing URL slug:', urlSlug, 'Cleaned slug:', cleanUrlSlug);
 
-        // If the slug contains a full URL, extract just the newsletter name
-        if (cleanUrlSlug.includes('/')) {
-            try {
-                const urlParts = cleanUrlSlug.split('/');
-                // Find the part after 'top-newsletters'
-                const newsletterIndex = urlParts.indexOf('top-newsletters');
-                if (newsletterIndex !== -1 && urlParts[newsletterIndex + 1]) {
-                    cleanUrlSlug = urlParts[newsletterIndex + 1];
-                } else {
-                    // If we can't find it after 'top-newsletters', just take the last segment
-                    cleanUrlSlug = urlParts[urlParts.length - 1];
-                }
-            } catch (error) {
-                console.error('Error processing URL slug:', error);
-            }
+        // Validate that we have a newsletter name
+        if (!cleanUrlSlug) {
+            console.error('Missing newsletter name');
+            return res.status(400).json({
+                success: false,
+                error: 'Missing newsletter name. Please ensure the scheduler is accessed from a newsletter page.'
+            });
         }
-
-        // Generate a fallback slug if none is provided
-        const finalSlug = cleanUrlSlug || `newsletter-${Date.now()}`;
-        console.log('Final URL slug to be used:', finalSlug);
 
         const query = `
             INSERT INTO schedules 
@@ -211,7 +199,7 @@ app.post('/api/schedule', async (req, res) => {
             email,
             parseInt(budget, 10),
             campaignGoals,
-            finalSlug
+            cleanUrlSlug
         ];
 
         console.log('Executing query with values:', JSON.stringify(values, null, 2));
