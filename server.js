@@ -13,14 +13,22 @@ app.use(cors({
         'https://sponsorindex.com',
         'https://www.sponsorindex.com',
         'http://sponsorindex.com',
-        'http://www.sponsorindex.com'
+        'http://www.sponsorindex.com',
+        'https://editor.wix.com',
+        'https://*.wixsite.com',
+        'https://sponsorindex.wixsite.com',
+        'https://www.sponsorindex.wixsite.com'
     ],
-    methods: ['GET', 'POST'],
-    credentials: true
+    methods: ['GET', 'POST', 'OPTIONS'],
+    credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Add OPTIONS handling for preflight requests
+app.options('*', cors());
 
 // Security headers for iframe embedding
 app.use((req, res, next) => {
@@ -81,6 +89,7 @@ initializeDatabase().catch(console.error);
 
 // API Routes
 app.post('/api/schedule', async (req, res) => {
+    console.log('Received scheduling request:', req.body);
     const client = await pool.connect();
     try {
         const {
@@ -93,6 +102,20 @@ app.post('/api/schedule', async (req, res) => {
             campaignGoals,
             urlSlug
         } = req.body;
+
+        // Validate required fields
+        const requiredFields = { date, time, time12Hour, name, email, budget, campaignGoals };
+        const missingFields = Object.entries(requiredFields)
+            .filter(([_, value]) => !value)
+            .map(([key]) => key);
+
+        if (missingFields.length > 0) {
+            console.error('Missing required fields:', missingFields);
+            return res.status(400).json({
+                success: false,
+                error: `Missing required fields: ${missingFields.join(', ')}`
+            });
+        }
 
         const query = `
             INSERT INTO schedules 
@@ -109,20 +132,23 @@ app.post('/api/schedule', async (req, res) => {
             email,
             budget,
             campaignGoals,
-            urlSlug
+            urlSlug || '' // Make urlSlug optional
         ];
 
-        await client.query(query, values);
+        console.log('Executing query with values:', values);
+        const result = await client.query(query, values);
+        console.log('Query result:', result.rows[0]);
 
         res.status(201).json({
             success: true,
-            message: 'Scheduling saved successfully'
+            message: 'Scheduling saved successfully',
+            data: result.rows[0]
         });
     } catch (error) {
         console.error('Error saving scheduling:', error);
         res.status(500).json({
             success: false,
-            error: 'Error saving scheduling'
+            error: error.message || 'Error saving scheduling'
         });
     } finally {
         client.release();
