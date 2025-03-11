@@ -171,6 +171,16 @@ app.post('/api/schedule', async (req, res) => {
             });
         }
 
+        // Clean and validate URL slug
+        const cleanUrlSlug = urlSlug ? urlSlug.trim() : '';
+        if (!cleanUrlSlug) {
+            console.error('Invalid or missing URL slug');
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid or missing URL slug'
+            });
+        }
+
         const query = `
             INSERT INTO schedules 
             (date, time, time_12_hour, name, email, budget, campaign_goals, url_slug)
@@ -184,9 +194,9 @@ app.post('/api/schedule', async (req, res) => {
             time12Hour,
             name,
             email,
-            parseInt(budget, 10), // Ensure budget is an integer
+            parseInt(budget, 10),
             campaignGoals,
-            urlSlug || '' // Make urlSlug optional
+            cleanUrlSlug
         ];
 
         console.log('Executing query with values:', JSON.stringify(values, null, 2));

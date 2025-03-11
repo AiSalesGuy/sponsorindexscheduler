@@ -23,8 +23,17 @@ let formData = {
     urlSlug: ""
 };
 
-// Get complete URL for slug
-formData.urlSlug = window.location.href;
+// Generate URL slug from the current path
+function generateUrlSlug() {
+    const pathSegments = window.location.pathname.split('/').filter(segment => segment);
+    if (pathSegments.length > 0) {
+        return pathSegments[pathSegments.length - 1];
+    }
+    return '';
+}
+
+// Set initial URL slug
+formData.urlSlug = generateUrlSlug();
 
 // Generate time slots
 function generateTimeSlots() {
