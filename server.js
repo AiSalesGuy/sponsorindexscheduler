@@ -157,9 +157,40 @@ app.post('/api/schedule', async (req, res) => {
     }
 });
 
+// Test database connection endpoint
+app.get('/api/test-db', async (req, res) => {
+    let client;
+    try {
+        client = await pool.connect();
+        const result = await client.query('SELECT NOW()');
+        res.json({
+            success: true,
+            message: 'Database connection successful',
+            timestamp: result.rows[0].now,
+            database_url: process.env.DATABASE_URL ? 'Set' : 'Not set',
+            postgres_url: process.env.POSTGRES_URL ? 'Set' : 'Not set'
+        });
+    } catch (error) {
+        console.error('Database connection test failed:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message,
+            database_url: process.env.DATABASE_URL ? 'Set' : 'Not set',
+            postgres_url: process.env.POSTGRES_URL ? 'Set' : 'Not set'
+        });
+    } finally {
+        if (client) client.release();
+    }
+});
+
 // Health check endpoint for Render
 app.get('/health', (req, res) => {
-    res.status(200).json({ status: 'healthy' });
+    res.status(200).json({ 
+        status: 'healthy',
+        environment: process.env.NODE_ENV,
+        database_url: process.env.DATABASE_URL ? 'Set' : 'Not set',
+        postgres_url: process.env.POSTGRES_URL ? 'Set' : 'Not set'
+    });
 });
 
 // Serve the HTML file for all routes (SPA support)
