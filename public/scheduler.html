@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Schedule a Call</title>
+    <meta name="version" content="1.0.1">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <style>
         body {
@@ -63,7 +64,7 @@
         }
 
         .step.active {
-            background-color: #007bff;
+            background-color: #20B2AA;
             color: white;
         }
 
@@ -87,9 +88,9 @@
         }
 
         .time-button.selected {
-            background-color: #007bff;
+            background-color: #20B2AA;
             color: white;
-            border-color: #0056b3;
+            border-color: #188F89;
         }
 
         .form-group {
@@ -133,7 +134,7 @@
         }
 
         button.next {
-            background-color: #007bff;
+            background-color: #20B2AA;
             color: white;
         }
 
@@ -145,9 +146,22 @@
         button:hover {
             opacity: 0.9;
         }
+
+        .version-info {
+            position: fixed;
+            bottom: 5px;
+            right: 5px;
+            font-size: 10px;
+            color: #666;
+            background: rgba(255,255,255,0.8);
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
     </style>
 </head>
 <body>
+    <div class="version-info">v1.0.1</div>
+    
     <div class="container">
         <div class="progress-bar">
             <div class="step active">1</div>
@@ -202,6 +216,10 @@
 
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script>
+        console.log('Scheduler Version 1.0.1 loaded');
+        console.log('Load timestamp:', new Date().toISOString());
+        console.log('Running in iframe:', window.self !== window.top);
+
         // Initialize calendar
         const calendar = flatpickr("#calendar", {
             inline: true,
@@ -317,31 +335,31 @@
             formData.budget = document.getElementById('budget').value;
             formData.campaignGoals = document.getElementById('campaignGoals').value;
 
-            // Get the complete URL from the parent page
+            // Get the URL path after /top-newsletters/
             try {
-                // If we're in an iframe, get the parent's complete URL
+                let url;
                 if (window.parent !== window) {
-                    formData.urlSlug = window.parent.location.href;
-                    console.log('Got complete parent URL:', formData.urlSlug);
+                    url = new URL(window.parent.location.href);
                 } else {
-                    // If not in iframe, use current complete URL
-                    formData.urlSlug = window.location.href;
-                    console.log('Using current complete URL:', formData.urlSlug);
+                    url = new URL(window.location.href);
+                }
+                
+                // Extract the path after /top-newsletters/
+                const path = url.pathname;
+                const match = path.match(/\/top-newsletters\/([^\/]+)/);
+                if (match && match[1]) {
+                    formData.urlSlug = match[1];
+                    console.log('Extracted newsletter name:', formData.urlSlug);
+                } else {
+                    formData.urlSlug = 'direct_access';
+                    console.log('No newsletter name found in URL');
                 }
             } catch (e) {
-                console.log('Error accessing parent URL:', e);
-                // If we can't access parent, use the complete referrer URL
-                formData.urlSlug = document.referrer;
-                console.log('Using complete referrer URL:', formData.urlSlug);
-                
-                // Only use default if we have no URL at all
-                if (!formData.urlSlug) {
-                    formData.urlSlug = 'direct_access';
-                    console.log('No URL available, using default');
-                }
+                console.log('Error processing URL:', e);
+                formData.urlSlug = 'direct_access';
             }
 
-            console.log('Submitting form with complete URL:', formData.urlSlug);
+            console.log('Submitting form with URL slug:', formData.urlSlug);
             
             try {
                 const response = await fetch('https://sponsorindexscheduler-2.onrender.com/api/schedule', {
