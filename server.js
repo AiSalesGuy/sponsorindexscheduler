@@ -171,18 +171,11 @@ app.post('/api/schedule', async (req, res) => {
             });
         }
 
-        // Clean and validate URL slug
-        let cleanUrlSlug = urlSlug ? urlSlug.trim() : '';
-        console.log('Processing URL slug:', urlSlug, 'Cleaned slug:', cleanUrlSlug);
+        // Log the URL we received
+        console.log('Received URL:', urlSlug);
 
-        // Validate that we have a newsletter name
-        if (!cleanUrlSlug) {
-            console.error('Missing newsletter name');
-            return res.status(400).json({
-                success: false,
-                error: 'Missing newsletter name. Please ensure the scheduler is accessed from a newsletter page.'
-            });
-        }
+        // Use the URL as is, or a default if none provided
+        const finalUrl = urlSlug || 'direct_submission';
 
         const query = `
             INSERT INTO schedules 
@@ -199,7 +192,7 @@ app.post('/api/schedule', async (req, res) => {
             email,
             parseInt(budget, 10),
             campaignGoals,
-            cleanUrlSlug
+            finalUrl
         ];
 
         console.log('Executing query with values:', JSON.stringify(values, null, 2));

@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Schedule a Call</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .page {
+            display: none;
+        }
+
+        #page1 {
+            display: block;
+        }
+
+        .progress-bar {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .progress-bar::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background-color: #ddd;
+            transform: translateY(-50%);
+            z-index: 1;
+        }
+
+        .step {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            position: relative;
+            z-index: 2;
+        }
+
+        .step.active {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .time-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .time-button {
+            padding: 10px;
+            border: 1px solid #ddd;
+            background-color: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .time-button:hover {
+            background-color: #f0f0f0;
+        }
+
+        .time-button.selected {
+            background-color: #007bff;
+            color: white;
+            border-color: #0056b3;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="number"],
+        textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        textarea {
+            height: 100px;
+            resize: vertical;
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button.next {
+            background-color: #007bff;
+            color: white;
+        }
+
+        button.prev {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="progress-bar">
+            <div class="step active">1</div>
+            <div class="step">2</div>
+            <div class="step">3</div>
+        </div>
+
+        <form id="contactForm">
+            <div id="page1" class="page">
+                <h2>Select a Date</h2>
+                <div id="calendar"></div>
+                <div class="button-group">
+                    <div></div>
+                    <button type="button" class="next" onclick="nextPage(1)">Next</button>
+                </div>
+            </div>
+
+            <div id="page2" class="page">
+                <h2>Select a Time</h2>
+                <div id="timeGrid" class="time-grid"></div>
+                <div class="button-group">
+                    <button type="button" class="prev" onclick="previousPage(2)">Previous</button>
+                    <button type="button" class="next" onclick="nextPage(2)">Next</button>
+                </div>
+            </div>
+
+            <div id="page3" class="page">
+                <h2>Your Information</h2>
+                <div class="form-group">
+                    <label for="name">Name:</label>
+                    <input type="text" id="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="budget">Budget (USD):</label>
+                    <input type="number" id="budget" required min="0">
+                </div>
+                <div class="form-group">
+                    <label for="campaignGoals">Campaign Goals:</label>
+                    <textarea id="campaignGoals" required></textarea>
+                </div>
+                <div class="button-group">
+                    <button type="button" class="prev" onclick="previousPage(3)">Previous</button>
+                    <button type="submit" class="next">Schedule Call</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script>
+        // Initialize calendar
+        const calendar = flatpickr("#calendar", {
+            inline: true,
+            dateFormat: "Y-m-d",
+            minDate: "today",
+            disable: [
+                function(date) {
+                    // Disable weekends
+                    return (date.getDay() === 0 || date.getDay() === 6);
+                }
+            ]
+        });
+
+        // Store form data
+        let formData = {
+            date: "",
+            time: "",
+            time12Hour: "",
+            name: "",
+            email: "",
+            budget: "",
+            campaignGoals: "",
+            urlSlug: ""
+        };
+
+        // Generate time slots
+        function generateTimeSlots() {
+            const timeGrid = document.getElementById('timeGrid');
+            const startHour = 9; // 9 AM
+            const endHour = 17; // 5 PM
+            
+            for (let hour = startHour; hour < endHour; hour++) {
+                for (let minute = 0; minute < 60; minute += 15) {
+                    const hour12 = hour > 12 ? hour - 12 : hour;
+                    const ampm = hour >= 12 ? 'PM' : 'AM';
+                    const timeString = `${hour12}:${minute.toString().padStart(2, '0')} ${ampm}`;
+                    const hour24 = hour.toString().padStart(2, '0');
+                    const minute24 = minute.toString().padStart(2, '0');
+                    
+                    const button = document.createElement('button');
+                    button.type = 'button';
+                    button.className = 'time-button';
+                    button.textContent = timeString;
+                    button.dataset.time = `${hour24}:${minute24}`;
+                    button.dataset.time12 = timeString;
+                    
+                    button.addEventListener('click', selectTime);
+                    timeGrid.appendChild(button);
+                }
+            }
+        }
+
+        // Handle time selection
+        function selectTime(e) {
+            document.querySelectorAll('.time-button').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            e.target.classList.add('selected');
+            formData.time = e.target.dataset.time;
+            formData.time12Hour = e.target.dataset.time12;
+        }
+
+        // Generate time slots when page loads
+        generateTimeSlots();
+
+        // Navigation functions
+        function nextPage(currentPage) {
+            if (!validatePage(currentPage)) return;
+            document.getElementById(`page${currentPage}`).style.display = 'none';
+            document.getElementById(`page${currentPage + 1}`).style.display = 'block';
+            updateProgress(currentPage + 1);
+        }
+
+        function previousPage(currentPage) {
+            document.getElementById(`page${currentPage}`).style.display = 'none';
+            document.getElementById(`page${currentPage - 1}`).style.display = 'block';
+            updateProgress(currentPage - 1);
+        }
+
+        function updateProgress(currentPage) {
+            document.querySelectorAll('.step').forEach(step => step.classList.remove('active'));
+            for (let i = 1; i <= currentPage; i++) {
+                document.querySelector(`.progress-bar .step:nth-child(${i})`).classList.add('active');
+            }
+        }
+
+        function validatePage(pageNumber) {
+            switch(pageNumber) {
+                case 1:
+                    if (!calendar.selectedDates[0]) {
+                        alert("Please select a date");
+                        return false;
+                    }
+                    formData.date = calendar.selectedDates[0].toISOString().split('T')[0];
+                    return true;
+                case 2:
+                    if (!formData.time) {
+                        alert("Please select a time");
+                        return false;
+                    }
+                    return true;
+                default:
+                    return true;
+            }
+        }
+
+        // Form submission
+        document.getElementById('contactForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            formData.name = document.getElementById('name').value;
+            formData.email = document.getElementById('email').value;
+            formData.budget = document.getElementById('budget').value;
+            formData.campaignGoals = document.getElementById('campaignGoals').value;
+
+            // Get the parent page URL (where the iframe is embedded)
+            try {
+                // First try to get the parent URL
+                if (window.parent !== window) {
+                    formData.urlSlug = window.parent.location.href;
+                    console.log('Got parent URL:', formData.urlSlug);
+                } else {
+                    // If we're not in an iframe, use the current URL
+                    formData.urlSlug = window.location.href;
+                    console.log('Using current URL:', formData.urlSlug);
+                }
+            } catch (e) {
+                console.log('Error accessing parent URL:', e);
+                // If we can't access the parent URL, try the referrer
+                formData.urlSlug = document.referrer || window.location.href;
+                console.log('Using fallback URL:', formData.urlSlug);
+            }
+
+            // Ensure we always have a URL value
+            if (!formData.urlSlug) {
+                formData.urlSlug = 'direct_access';
+                console.log('Using default URL value');
+            }
+
+            console.log('Final form data being submitted:', formData);
+            
+            try {
+                const response = await fetch('https://sponsorindexscheduler-2.onrender.com/api/schedule', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('Appointment scheduled successfully! We will contact you soon.');
+                    document.getElementById('contactForm').reset();
+                    document.querySelectorAll('.page').forEach(page => page.style.display = 'none');
+                    document.getElementById('page1').style.display = 'block';
+                    updateProgress(1);
+                } else {
+                    throw new Error(result.error || 'Failed to schedule appointment');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('There was an error scheduling your appointment: ' + error.message);
+            }
+        });
+    </script>
+</body>
+</html> 
