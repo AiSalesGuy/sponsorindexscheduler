@@ -317,31 +317,31 @@
             formData.budget = document.getElementById('budget').value;
             formData.campaignGoals = document.getElementById('campaignGoals').value;
 
-            // Get the parent page URL (where the iframe is embedded)
+            // Get the complete URL from the parent page
             try {
-                // First try to get the parent URL
+                // If we're in an iframe, get the parent's complete URL
                 if (window.parent !== window) {
                     formData.urlSlug = window.parent.location.href;
-                    console.log('Got parent URL:', formData.urlSlug);
+                    console.log('Got complete parent URL:', formData.urlSlug);
                 } else {
-                    // If we're not in an iframe, use the current URL
+                    // If not in iframe, use current complete URL
                     formData.urlSlug = window.location.href;
-                    console.log('Using current URL:', formData.urlSlug);
+                    console.log('Using current complete URL:', formData.urlSlug);
                 }
             } catch (e) {
                 console.log('Error accessing parent URL:', e);
-                // If we can't access the parent URL, try the referrer
-                formData.urlSlug = document.referrer || window.location.href;
-                console.log('Using fallback URL:', formData.urlSlug);
+                // If we can't access parent, use the complete referrer URL
+                formData.urlSlug = document.referrer;
+                console.log('Using complete referrer URL:', formData.urlSlug);
+                
+                // Only use default if we have no URL at all
+                if (!formData.urlSlug) {
+                    formData.urlSlug = 'direct_access';
+                    console.log('No URL available, using default');
+                }
             }
 
-            // Ensure we always have a URL value
-            if (!formData.urlSlug) {
-                formData.urlSlug = 'direct_access';
-                console.log('Using default URL value');
-            }
-
-            console.log('Final form data being submitted:', formData);
+            console.log('Submitting form with complete URL:', formData.urlSlug);
             
             try {
                 const response = await fetch('https://sponsorindexscheduler-2.onrender.com/api/schedule', {
