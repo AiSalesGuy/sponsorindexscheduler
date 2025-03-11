@@ -12,6 +12,7 @@
             margin: 0;
             padding: 20px;
             background-color: #f5f5f5;
+            min-height: 100vh;
         }
 
         .container {
@@ -25,10 +26,18 @@
 
         .page {
             display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        .page.active {
+            display: block;
+            opacity: 1;
         }
 
         #page1 {
             display: block;
+            opacity: 1;
         }
 
         .progress-bar {
@@ -36,14 +45,15 @@
             justify-content: space-between;
             margin-bottom: 20px;
             position: relative;
+            padding: 0 15px;
         }
 
         .progress-bar::before {
             content: '';
             position: absolute;
             top: 50%;
-            left: 0;
-            right: 0;
+            left: 30px;
+            right: 30px;
             height: 2px;
             background-color: #ddd;
             transform: translateY(-50%);
@@ -61,6 +71,7 @@
             font-weight: bold;
             position: relative;
             z-index: 2;
+            transition: background-color 0.3s ease;
         }
 
         .step.active {
@@ -70,9 +81,9 @@
 
         .time-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
             gap: 10px;
-            margin-bottom: 20px;
+            margin: 20px 0;
         }
 
         .time-button {
@@ -81,10 +92,13 @@
             background-color: white;
             border-radius: 4px;
             cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 14px;
         }
 
         .time-button:hover {
             background-color: #f0f0f0;
+            border-color: #20B2AA;
         }
 
         .time-button.selected {
@@ -94,13 +108,14 @@
         }
 
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
 
         label {
             display: block;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
             font-weight: bold;
+            color: #333;
         }
 
         input[type="text"],
@@ -108,29 +123,39 @@
         input[type="number"],
         textarea {
             width: 100%;
-            padding: 8px;
+            padding: 10px;
             border: 1px solid #ddd;
             border-radius: 4px;
             box-sizing: border-box;
+            font-size: 16px;
+            transition: border-color 0.2s ease;
+        }
+
+        input:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #20B2AA;
         }
 
         textarea {
-            height: 100px;
+            height: 120px;
             resize: vertical;
         }
 
         .button-group {
             display: flex;
             justify-content: space-between;
-            margin-top: 20px;
+            margin-top: 30px;
         }
 
         button {
-            padding: 10px 20px;
+            padding: 12px 24px;
             border: none;
             border-radius: 4px;
             cursor: pointer;
             font-weight: bold;
+            font-size: 16px;
+            transition: all 0.2s ease;
         }
 
         button.next {
@@ -145,6 +170,11 @@
 
         button:hover {
             opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        button:active {
+            transform: translateY(0);
         }
 
         .version-info {
@@ -156,6 +186,27 @@
             background: rgba(255,255,255,0.8);
             padding: 2px 5px;
             border-radius: 3px;
+        }
+
+        /* Calendar customization */
+        .flatpickr-calendar {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+            border-radius: 8px !important;
+        }
+
+        .flatpickr-day.selected {
+            background: #20B2AA !important;
+            border-color: #20B2AA !important;
+        }
+
+        .flatpickr-day:hover {
+            background: #e6f7f7 !important;
+        }
+
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 24px;
         }
     </style>
 </head>
@@ -170,7 +221,7 @@
         </div>
 
         <form id="contactForm">
-            <div id="page1" class="page">
+            <div id="page1" class="page active">
                 <h2>Select a Date</h2>
                 <div id="calendar"></div>
                 <div class="button-group">
@@ -248,11 +299,12 @@
         // Generate time slots
         function generateTimeSlots() {
             const timeGrid = document.getElementById('timeGrid');
+            timeGrid.innerHTML = ''; // Clear existing slots
             const startHour = 9; // 9 AM
             const endHour = 17; // 5 PM
             
             for (let hour = startHour; hour < endHour; hour++) {
-                for (let minute = 0; minute < 60; minute += 15) {
+                for (let minute = 0; minute < 60; minute += 30) {
                     const hour12 = hour > 12 ? hour - 12 : hour;
                     const ampm = hour >= 12 ? 'PM' : 'AM';
                     const timeString = `${hour12}:${minute.toString().padStart(2, '0')} ${ampm}`;
@@ -288,22 +340,44 @@
         // Navigation functions
         function nextPage(currentPage) {
             if (!validatePage(currentPage)) return;
-            document.getElementById(`page${currentPage}`).style.display = 'none';
-            document.getElementById(`page${currentPage + 1}`).style.display = 'block';
+            
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+                page.style.display = 'none';
+            });
+            
+            const nextPageElement = document.getElementById(`page${currentPage + 1}`);
+            nextPageElement.style.display = 'block';
+            setTimeout(() => {
+                nextPageElement.classList.add('active');
+            }, 50);
+            
             updateProgress(currentPage + 1);
         }
 
         function previousPage(currentPage) {
-            document.getElementById(`page${currentPage}`).style.display = 'none';
-            document.getElementById(`page${currentPage - 1}`).style.display = 'block';
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+                page.style.display = 'none';
+            });
+            
+            const prevPageElement = document.getElementById(`page${currentPage - 1}`);
+            prevPageElement.style.display = 'block';
+            setTimeout(() => {
+                prevPageElement.classList.add('active');
+            }, 50);
+            
             updateProgress(currentPage - 1);
         }
 
         function updateProgress(currentPage) {
-            document.querySelectorAll('.step').forEach(step => step.classList.remove('active'));
-            for (let i = 1; i <= currentPage; i++) {
-                document.querySelector(`.progress-bar .step:nth-child(${i})`).classList.add('active');
-            }
+            document.querySelectorAll('.step').forEach((step, index) => {
+                if (index + 1 <= currentPage) {
+                    step.classList.add('active');
+                } else {
+                    step.classList.remove('active');
+                }
+            });
         }
 
         function validatePage(pageNumber) {
@@ -378,9 +452,26 @@
                 if (result.success) {
                     alert('Appointment scheduled successfully! We will contact you soon.');
                     document.getElementById('contactForm').reset();
-                    document.querySelectorAll('.page').forEach(page => page.style.display = 'none');
-                    document.getElementById('page1').style.display = 'block';
+                    document.querySelectorAll('.page').forEach(page => {
+                        page.classList.remove('active');
+                        page.style.display = 'none';
+                    });
+                    const firstPage = document.getElementById('page1');
+                    firstPage.style.display = 'block';
+                    setTimeout(() => {
+                        firstPage.classList.add('active');
+                    }, 50);
                     updateProgress(1);
+                    formData = {
+                        date: "",
+                        time: "",
+                        time12Hour: "",
+                        name: "",
+                        email: "",
+                        budget: "",
+                        campaignGoals: "",
+                        urlSlug: ""
+                    };
                 } else {
                     throw new Error(result.error || 'Failed to schedule appointment');
                 }
