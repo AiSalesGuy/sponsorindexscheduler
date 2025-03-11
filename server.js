@@ -16,7 +16,7 @@ app.use(cors({
 }));
 
 app.use(express.json());
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Security headers for iframe embedding
 app.use((req, res, next) => {
@@ -25,41 +25,59 @@ app.use((req, res, next) => {
     next();
 });
 
-// PostgreSQL connection
+// PostgreSQL connection configuration
 const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: {
+    connectionString: process.env.DATABASE_URL || process.env.POSTGRES_URL,
+    ssl: process.env.NODE_ENV === 'production' ? {
         rejectUnauthorized: false
-    }
+    } : false
+});
+
+// Test database connection
+pool.on('connect', () => {
+    console.log('Connected to PostgreSQL database');
+});
+
+pool.on('error', (err) => {
+    console.error('Unexpected error on idle client', err);
+    process.exit(-1);
 });
 
 // Initialize database table
 async function initializeDatabase() {
     try {
-        await pool.query(`
-            CREATE TABLE IF NOT EXISTS schedules (
-                id SERIAL PRIMARY KEY,
-                date VARCHAR(10) NOT NULL,
-                time VARCHAR(5) NOT NULL,
-                time_12_hour VARCHAR(8) NOT NULL,
-                name VARCHAR(100) NOT NULL,
-                email VARCHAR(100) NOT NULL,
-                budget INTEGER NOT NULL,
-                campaign_goals TEXT NOT NULL,
-                url_slug TEXT NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        `);
-        console.log('Database initialized successfully');
+        const client = await pool.connect();
+        try {
+            await client.query(`
+                CREATE TABLE IF NOT EXISTS schedules (
+                    id SERIAL PRIMARY KEY,
+                    date VARCHAR(10) NOT NULL,
+                    time VARCHAR(5) NOT NULL,
+                    time_12_hour VARCHAR(8) NOT NULL,
+                    name VARCHAR(100) NOT NULL,
+                    email VARCHAR(100) NOT NULL,
+                    budget INTEGER NOT NULL,
+                    campaign_goals TEXT NOT NULL,
+                    url_slug TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            `);
+            console.log('Database initialized successfully');
+        } finally {
+            client.release();
+        }
     } catch (error) {
         console.error('Error initializing database:', error);
+        // Don't exit the process, just log the error
     }
 }
 
-initializeDatabase();
+// Initialize database on startup
+initializeDatabase().catch(console.error);
 
 // API Routes
 app.post('/api/schedule', async (req, res) => {
+    const client = await pool.connect();
     try {
         const {
             date,
@@ -90,7 +108,7 @@ app.post('/api/schedule', async (req, res) => {
             urlSlug
         ];
 
-        await pool.query(query, values);
+        await client.query(query, values);
 
         res.status(201).json({
             success: true,
@@ -102,6 +120,8 @@ app.post('/api/schedule', async (req, res) => {
             success: false,
             error: 'Error saving scheduling'
         });
+    } finally {
+        client.release();
     }
 });
 
@@ -110,8 +130,8 @@ app.get('/health', (req, res) => {
     res.status(200).json({ status: 'healthy' });
 });
 
-// Serve the HTML file
-app.get('/', (req, res) => {
+// Serve the HTML file for all routes (SPA support)
+app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 

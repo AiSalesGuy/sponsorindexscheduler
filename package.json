@@ -1,5 +1,5 @@
 {
-  "name": "sponsorindex-scheduler",
+  "name": "sponsorindexscheduler",
   "version": "1.0.0",
   "description": "Scheduling system for SponsorIndex",
   "main": "server.js",
