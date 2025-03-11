@@ -141,7 +141,10 @@ document.getElementById('contactForm').addEventListener('submit', async function
     formData.budget = document.getElementById('budget').value;
     formData.campaignGoals = document.getElementById('campaignGoals').value;
     
+    console.log('Submitting form data:', formData);
+    
     try {
+        console.log('Sending request to:', 'https://sponsorindexscheduler-2.onrender.com/api/schedule');
         const response = await fetch('https://sponsorindexscheduler-2.onrender.com/api/schedule', {
             method: 'POST',
             headers: {
@@ -150,13 +153,26 @@ document.getElementById('contactForm').addEventListener('submit', async function
             body: JSON.stringify(formData)
         });
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+        console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers);
+
+        const responseText = await response.text();
+        console.log('Raw response:', responseText);
+
+        let result;
+        try {
+            result = JSON.parse(responseText);
+        } catch (parseError) {
+            console.error('Error parsing response:', parseError);
+            throw new Error('Invalid response from server: ' + responseText);
         }
 
-        const result = await response.json();
+        if (!response.ok) {
+            throw new Error(result.error || `HTTP error! status: ${response.status}`);
+        }
 
         if (result.success) {
+            console.log('Appointment scheduled successfully:', result);
             alert('Appointment scheduled successfully! We will contact you soon.');
             // Reset form and go back to first page
             document.getElementById('contactForm').reset();
@@ -167,7 +183,7 @@ document.getElementById('contactForm').addEventListener('submit', async function
             throw new Error(result.error || 'Failed to schedule appointment');
         }
     } catch (error) {
-        console.error('Error:', error);
+        console.error('Error details:', error);
         alert('There was an error scheduling your appointment: ' + error.message);
     }
 }); 

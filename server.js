@@ -71,9 +71,22 @@ initializeDatabase().catch(console.error);
 
 // API Routes
 app.post('/api/schedule', async (req, res) => {
-    console.log('Received scheduling request:', req.body);
-    const client = await pool.connect();
+    console.log('Received scheduling request with body:', JSON.stringify(req.body, null, 2));
+    console.log('Request headers:', req.headers);
+
+    if (!req.body || Object.keys(req.body).length === 0) {
+        console.error('Empty request body received');
+        return res.status(400).json({
+            success: false,
+            error: 'Empty request body'
+        });
+    }
+
+    let client;
     try {
+        client = await pool.connect();
+        console.log('Database connection established');
+
         const {
             date,
             time,
@@ -112,28 +125,35 @@ app.post('/api/schedule', async (req, res) => {
             time12Hour,
             name,
             email,
-            budget,
+            parseInt(budget, 10), // Ensure budget is an integer
             campaignGoals,
             urlSlug || '' // Make urlSlug optional
         ];
 
-        console.log('Executing query with values:', values);
+        console.log('Executing query with values:', JSON.stringify(values, null, 2));
         const result = await client.query(query, values);
-        console.log('Query result:', result.rows[0]);
+        console.log('Query executed successfully. Result:', JSON.stringify(result.rows[0], null, 2));
 
-        res.status(201).json({
+        const response = {
             success: true,
             message: 'Scheduling saved successfully',
             data: result.rows[0]
-        });
+        };
+        console.log('Sending response:', JSON.stringify(response, null, 2));
+        res.status(201).json(response);
     } catch (error) {
-        console.error('Error saving scheduling:', error);
+        console.error('Error in /api/schedule:', error);
+        console.error('Error stack:', error.stack);
         res.status(500).json({
             success: false,
-            error: error.message || 'Error saving scheduling'
+            error: error.message || 'Error saving scheduling',
+            details: process.env.NODE_ENV === 'development' ? error.stack : undefined
         });
     } finally {
-        client.release();
+        if (client) {
+            console.log('Releasing database connection');
+            client.release();
+        }
     }
 });
 
