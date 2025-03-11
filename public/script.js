@@ -142,25 +142,37 @@ document.getElementById('contactForm').addEventListener('submit', async function
     formData.campaignGoals = document.getElementById('campaignGoals').value;
     
     try {
-        const response = await fetch('/api/schedule', {
+        const response = await fetch('https://sponsorindexscheduler-2.onrender.com/api/schedule', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'Origin': window.location.origin
             },
+            mode: 'cors',
+            credentials: 'include',
             body: JSON.stringify(formData)
         });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+        }
 
         const result = await response.json();
 
         if (result.success) {
             alert('Appointment scheduled successfully! We will contact you soon.');
-            // Optional: Reset form
+            // Reset form and go back to first page
             document.getElementById('contactForm').reset();
+            document.querySelectorAll('.page').forEach(page => page.style.display = 'none');
+            document.getElementById('page1').style.display = 'block';
+            updateProgress(1);
         } else {
             throw new Error(result.error || 'Failed to schedule appointment');
         }
     } catch (error) {
         console.error('Error:', error);
-        alert('There was an error scheduling your appointment. Please try again.');
+        alert('There was an error scheduling your appointment: ' + error.message);
     }
 }); 
