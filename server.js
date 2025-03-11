@@ -20,11 +20,22 @@ app.use((req, res, next) => {
 });
 
 // PostgreSQL connection configuration
+console.log('Database URL:', process.env.DATABASE_URL);
+console.log('Postgres URL:', process.env.POSTGRES_URL);
+
+const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+if (!connectionString) {
+    console.error('No database connection string provided!');
+    process.exit(1);
+}
+
+console.log('Using connection string:', connectionString.replace(/:[^:@]+@/, ':****@')); // Log URL with password hidden
+
 const pool = new Pool({
-    connectionString: process.env.DATABASE_URL || process.env.POSTGRES_URL,
-    ssl: process.env.NODE_ENV === 'production' ? {
+    connectionString: connectionString,
+    ssl: {
         rejectUnauthorized: false
-    } : false
+    }
 });
 
 // Test database connection
