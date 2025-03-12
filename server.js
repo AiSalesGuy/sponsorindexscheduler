@@ -130,87 +130,38 @@ app.get('/api/schedules', async (req, res) => {
 });
 
 app.post('/api/schedule', async (req, res) => {
-    console.log('Received scheduling request with body:', JSON.stringify(req.body, null, 2));
-
-    if (!req.body || Object.keys(req.body).length === 0) {
-        console.error('Empty request body received');
-        return res.status(400).json({
-            success: false,
-            error: 'Empty request body'
-        });
-    }
-
-    let client;
+    console.log('Received scheduling request:', JSON.stringify(req.body, null, 2));
+    
     try {
-        client = await pool.connect();
-        console.log('Database connection established');
-
-        const {
-            date,
-            time,
-            time12Hour,
-            name,
-            email,
-            budget,
-            campaignGoals,
-            urlSlug
-        } = req.body;
+        const { date, time, time12Hour, name, email, budget, campaignGoals, urlSlug } = req.body;
 
         // Validate required fields
-        const requiredFields = { date, time, time12Hour, name, email, budget, campaignGoals };
-        const missingFields = Object.entries(requiredFields)
-            .filter(([_, value]) => !value)
-            .map(([key]) => key);
-
-        if (missingFields.length > 0) {
-            console.error('Missing required fields:', missingFields);
-            return res.status(400).json({
-                success: false,
-                error: `Missing required fields: ${missingFields.join(', ')}`
-            });
+        if (!date || !time || !name || !email || !budget || !campaignGoals) {
+            console.error('Missing required fields');
+            return res.status(400).json({ success: false, error: 'All fields are required' });
         }
 
-        // Simply use the urlSlug as is, with a fallback to direct_access
-        const newsletterName = urlSlug || 'direct_access';
+        // Get newsletter name from urlSlug, default to 'direct_access' if not provided
+        const newsletterName = urlSlug && urlSlug.trim() !== '' ? urlSlug.trim() : 'direct_access';
         console.log('Using newsletter name:', newsletterName);
 
+        // Insert into database
         const query = `
-            INSERT INTO schedules 
-            (date, time, time_12_hour, name, email, budget, campaign_goals, url_slug)
+            INSERT INTO schedules (date, time, time_12_hour, name, email, budget, campaign_goals, url_slug)
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
             RETURNING *
         `;
-
-        const values = [
-            date,
-            time,
-            time12Hour,
-            name,
-            email,
-            parseInt(budget, 10),
-            campaignGoals,
-            newsletterName
-        ];
-
-        const result = await client.query(query, values);
         
-        const response = {
-            success: true,
-            message: 'Scheduling saved successfully',
-            data: result.rows[0]
-        };
-        res.status(201).json(response);
+        const values = [date, time, time12Hour, name, email, budget, campaignGoals, newsletterName];
+        console.log('Executing query with values:', values);
+        
+        const result = await pool.query(query, values);
+        console.log('Database insert result:', result.rows[0]);
+        
+        res.json({ success: true, data: result.rows[0] });
     } catch (error) {
-        console.error('Error in /api/schedule:', error);
-        res.status(500).json({
-            success: false,
-            error: error.message || 'Error saving scheduling',
-            details: process.env.NODE_ENV === 'development' ? error.stack : undefined
-        });
-    } finally {
-        if (client) {
-            client.release();
-        }
+        console.error('Error scheduling appointment:', error);
+        res.status(500).json({ success: false, error: 'Failed to schedule appointment' });
     }
 });
 
