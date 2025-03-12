@@ -14,8 +14,8 @@
         }
 
         html, body {
-            height: 100%;
-            width: 100%;
+            width: 320px; /* Fixed width for smallest phones */
+            height: 480px; /* Fixed height */
             margin: 0;
             padding: 0;
             overflow: hidden;
@@ -24,8 +24,8 @@
         }
 
         .container {
-            height: 100%;
             width: 100%;
+            height: 100%;
             padding: 5px;
             background: transparent;
             display: flex;
@@ -36,17 +36,17 @@
             flex: 0 0 auto;
             display: flex;
             justify-content: space-between;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             position: relative;
-            padding: 0 10px;
+            padding: 0 5px;
         }
 
         .progress-bar::before {
             content: '';
             position: absolute;
             top: 50%;
-            left: 25px;
-            right: 25px;
+            left: 20px;
+            right: 20px;
             height: 2px;
             background-color: #ddd;
             transform: translateY(-50%);
@@ -54,8 +54,8 @@
         }
 
         .step {
-            width: 20px;
-            height: 20px;
+            width: 18px;
+            height: 18px;
             border-radius: 50%;
             background-color: #ddd;
             display: flex;
@@ -65,7 +65,7 @@
             position: relative;
             z-index: 2;
             transition: background-color 0.3s ease;
-            font-size: 11px;
+            font-size: 10px;
         }
 
         .step.active {
@@ -77,9 +77,8 @@
             display: none;
             opacity: 0;
             transition: opacity 0.3s ease-in-out;
-            height: calc(100% - 30px);
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
+            height: calc(100% - 26px);
+            overflow: hidden;
         }
 
         .page.active {
@@ -89,33 +88,35 @@
         }
 
         h2 {
-            font-size: 16px;
-            margin-bottom: 10px;
+            font-size: 14px;
+            margin-bottom: 8px;
             color: #333;
             flex: 0 0 auto;
         }
 
         #calendar {
             flex: 1 1 auto;
-            min-height: 300px;
-            margin-bottom: 10px;
+            min-height: 280px;
+            margin-bottom: 8px;
         }
 
         .time-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-            gap: 5px;
-            margin: 10px 0;
+            grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+            gap: 4px;
+            margin: 8px 0;
+            max-height: 320px;
+            overflow-y: auto;
         }
 
         .time-button {
-            padding: 6px;
+            padding: 5px;
             border: 1px solid #ddd;
             background-color: white;
             border-radius: 4px;
             cursor: pointer;
             transition: all 0.2s ease;
-            font-size: 12px;
+            font-size: 11px;
             white-space: nowrap;
             text-align: center;
         }
@@ -132,15 +133,15 @@
         }
 
         .form-group {
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
         label {
             display: block;
-            margin-bottom: 4px;
+            margin-bottom: 3px;
             font-weight: bold;
             color: #333;
-            font-size: 12px;
+            font-size: 11px;
         }
 
         input[type="text"],
@@ -148,34 +149,33 @@
         input[type="number"],
         textarea {
             width: 100%;
-            padding: 6px;
+            padding: 5px;
             border: 1px solid #ddd;
             border-radius: 4px;
-            font-size: 12px;
-            transition: border-color 0.2s ease;
+            font-size: 11px;
         }
 
         textarea {
-            height: 80px;
+            height: 60px;
             resize: none;
         }
 
         .button-group {
             display: flex;
             justify-content: space-between;
-            gap: 8px;
-            margin-top: 10px;
+            gap: 6px;
+            margin-top: 8px;
             flex: 0 0 auto;
         }
 
         button {
             flex: 1;
-            padding: 8px;
+            padding: 6px;
             border: none;
             border-radius: 4px;
             cursor: pointer;
             font-weight: bold;
-            font-size: 12px;
+            font-size: 11px;
             transition: opacity 0.2s ease;
         }
 
@@ -192,50 +192,73 @@
         /* Calendar customization */
         .flatpickr-calendar {
             width: 100% !important;
-            max-width: 100% !important;
+            max-width: 310px !important;
             box-shadow: none !important;
             border: none !important;
             background: transparent !important;
+            padding: 0 !important;
         }
 
         .flatpickr-months {
-            padding-top: 0 !important;
+            padding: 0 !important;
+            height: 28px !important;
         }
 
         .flatpickr-month {
-            height: 36px !important;
+            height: 28px !important;
         }
 
         .flatpickr-current-month {
-            padding-top: 0 !important;
-            font-size: 14px !important;
+            padding: 0 !important;
+            font-size: 13px !important;
+            height: 28px !important;
+        }
+
+        .flatpickr-weekdays {
+            height: 20px !important;
+            padding: 0 !important;
         }
 
         .flatpickr-weekday {
-            font-size: 12px !important;
+            font-size: 11px !important;
+            height: 20px !important;
+            line-height: 20px !important;
+        }
+
+        .flatpickr-days {
+            padding: 0 !important;
         }
 
         .flatpickr-day {
-            font-size: 12px !important;
-            line-height: 30px !important;
-            height: 30px !important;
-            max-height: 30px !important;
+            font-size: 11px !important;
+            line-height: 24px !important;
+            height: 24px !important;
+            max-height: 24px !important;
+            margin: 1px !important;
         }
 
-        .version-info {
-            display: none;
+        .flatpickr-day.selected {
+            background: #20B2AA !important;
+            border-color: #20B2AA !important;
         }
 
-        /* Hide flatpickr elements we don't need */
+        .flatpickr-day:hover {
+            background: #e6f7f7 !important;
+        }
+
+        /* Hide unnecessary elements */
+        .version-info,
         .flatpickr-time {
             display: none !important;
         }
 
-        /* Ensure content is always visible */
-        @supports (-webkit-touch-callout: none) {
-            .page {
-                height: -webkit-fill-available;
-            }
+        /* Remove all backgrounds */
+        .flatpickr-calendar,
+        .flatpickr-months,
+        .flatpickr-month,
+        .flatpickr-weekdays,
+        .dayContainer {
+            background: transparent !important;
         }
     </style>
 </head>
