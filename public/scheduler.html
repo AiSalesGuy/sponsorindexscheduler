@@ -270,28 +270,24 @@
         console.log('Scheduler Version 1.0.1 loaded');
         console.log('Load timestamp:', new Date().toISOString());
         console.log('Window location:', window.location.href);
-        console.log('Is in iframe:', window.self !== window.top);
-        console.log('Document referrer:', document.referrer);
+        console.log('URL search params:', window.location.search);
 
         // Get newsletter name from URL parameters
         let newsletter = 'direct_access';
         try {
             const urlParams = new URLSearchParams(window.location.search);
-            console.log('URL parameters:', urlParams.toString());
-            
             const newsletterParam = urlParams.get('newsletter');
-            console.log('Newsletter parameter:', newsletterParam);
+            console.log('Newsletter parameter received:', newsletterParam);
             
-            if (newsletterParam) {
-                newsletter = newsletterParam;
-                console.log('Setting newsletter to:', newsletter);
+            if (newsletterParam && newsletterParam.trim() !== '') {
+                newsletter = newsletterParam.trim();
+                console.log('Using newsletter name from URL parameter:', newsletter);
             } else {
-                console.log('No newsletter parameter found, keeping default');
+                console.log('No newsletter parameter found, using default:', newsletter);
             }
         } catch (e) {
             console.error('Error getting newsletter parameter:', e);
         }
-        console.log('Final newsletter value:', newsletter);
 
         let formData = {
             date: "",
@@ -430,8 +426,10 @@
             formData.email = document.getElementById('email').value;
             formData.budget = document.getElementById('budget').value;
             formData.campaignGoals = document.getElementById('campaignGoals').value;
+            
+            // Ensure we're using the newsletter name, not a URL
             formData.urlSlug = newsletter;
-
+            
             console.log('Form submission started');
             console.log('Newsletter value at submission:', newsletter);
             console.log('Full formData being sent:', JSON.stringify(formData, null, 2));
