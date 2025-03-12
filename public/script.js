@@ -23,27 +23,6 @@ let formData = {
     urlSlug: ""
 };
 
-// Generate URL slug from URL parameters
-function generateUrlSlug() {
-    // Get the newsletter name from URL parameters
-    const urlParams = new URLSearchParams(window.location.search);
-    const newsletter = urlParams.get('newsletter');
-    
-    if (newsletter) {
-        console.log('Found newsletter name from URL params:', newsletter);
-        return newsletter;
-    }
-    
-    console.warn('No newsletter parameter found in URL');
-    return '';
-}
-
-// Set initial URL slug
-formData.urlSlug = generateUrlSlug();
-
-// Log the URL slug for debugging
-console.log('Generated URL slug:', formData.urlSlug);
-
 // Generate time slots
 function generateTimeSlots() {
     const timeGrid = document.getElementById('timeGrid');
@@ -159,7 +138,21 @@ document.getElementById('contactForm').addEventListener('submit', async function
     formData.budget = document.getElementById('budget').value;
     formData.campaignGoals = document.getElementById('campaignGoals').value;
     
-    console.log('Submitting form data:', formData);
+    // Get the URL from the parent page if we're in an iframe, otherwise use current page URL
+    try {
+        formData.urlSlug = window.parent.location.href;
+    } catch (e) {
+        // If we can't access parent (due to same-origin policy), try to get it from referrer
+        formData.urlSlug = document.referrer || window.location.href;
+    }
+    
+    // Log form data for debugging
+    console.log('Form data being submitted:', {
+        ...formData,
+        url: formData.urlSlug,
+        isIframe: window.self !== window.top,
+        referrer: document.referrer
+    });
     
     try {
         console.log('Sending request to:', 'https://sponsorindexscheduler-2.onrender.com/api/schedule');
