@@ -270,10 +270,22 @@
         console.log('Scheduler Version 1.0.1 loaded');
         console.log('Load timestamp:', new Date().toISOString());
 
-        // Get newsletter name from URL parameters
-        const urlParams = new URLSearchParams(window.location.search);
-        const newsletter = urlParams.get('newsletter');
-        console.log('Newsletter from URL parameters:', newsletter);
+        // Get newsletter name from URL path
+        let newsletter = 'direct_access';
+        try {
+            if (window.self !== window.top) {
+                // We're in an iframe
+                const parentUrl = new URL(document.referrer);
+                const pathSegments = parentUrl.pathname.split('/');
+                const lastSegment = pathSegments[pathSegments.length - 1];
+                if (lastSegment) {
+                    newsletter = lastSegment;
+                }
+            }
+        } catch (e) {
+            console.error('Error getting parent URL:', e);
+        }
+        console.log('Newsletter from URL path:', newsletter);
 
         let formData = {
             date: "",
@@ -283,7 +295,7 @@
             email: "",
             budget: "",
             campaignGoals: "",
-            urlSlug: newsletter || 'direct_access'
+            urlSlug: newsletter
         };
 
         // Initialize calendar
