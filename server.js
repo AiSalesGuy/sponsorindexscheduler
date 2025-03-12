@@ -175,7 +175,7 @@ app.post('/api/schedule', async (req, res) => {
         console.log('Received URL:', urlSlug);
 
         // Use the URL as is, or a default if none provided
-        const finalUrl = urlSlug || 'direct_submission';
+        const finalUrl = urlSlug || 'direct_access';
 
         const query = `
             INSERT INTO schedules 

@@ -130,8 +130,10 @@
                     
                     data.data.forEach(schedule => {
                         const row = document.createElement('tr');
-                        const formattedSlug = schedule.url_slug.replace('https://sponsorindexscheduler-2.onrender.com/', '');
-                        const sponsorIndexUrl = `https://www.sponsorindex.com/top-newsletters/${formattedSlug}`;
+                        const formattedSlug = schedule.url_slug;
+                        const sponsorIndexUrl = formattedSlug === 'direct_access' 
+                            ? 'Direct Access'
+                            : `https://www.sponsorindex.com/top-newsletters/${formattedSlug}`;
                         row.innerHTML = `
                             <td>${schedule.date}</td>
                             <td>${schedule.time_12_hour}</td>
@@ -139,7 +141,10 @@
                             <td>${schedule.email}</td>
                             <td>$${schedule.budget.toLocaleString()}</td>
                             <td>${schedule.campaign_goals}</td>
-                            <td><a href="${sponsorIndexUrl}" target="_blank">${sponsorIndexUrl}</a></td>
+                            <td>${formattedSlug === 'direct_access' 
+                                ? 'Direct Access' 
+                                : `<a href="${sponsorIndexUrl}" target="_blank">${formattedSlug}</a>`
+                            }</td>
                         `;
                         tbody.appendChild(row);
                     });
