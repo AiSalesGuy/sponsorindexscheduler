@@ -280,10 +280,21 @@
             console.log('Newsletter parameter received:', newsletterParam);
             
             if (newsletterParam && newsletterParam.trim() !== '') {
+                // Clean up the newsletter name
                 newsletter = newsletterParam.trim();
-                console.log('Using newsletter name from URL parameter:', newsletter);
+                
+                // If it's a URL or contains domain, use default
+                if (newsletter.includes('sponsorindex.com') || 
+                    newsletter.includes('http://') || 
+                    newsletter.includes('https://') ||
+                    newsletter.includes('www.')) {
+                    newsletter = 'direct_access';
+                    console.log('Newsletter parameter was a URL, using default');
+                } else {
+                    console.log('Using clean newsletter name:', newsletter);
+                }
             } else {
-                console.log('No newsletter parameter found, using default:', newsletter);
+                console.log('No newsletter parameter found, using default');
             }
         } catch (e) {
             console.error('Error getting newsletter parameter:', e);

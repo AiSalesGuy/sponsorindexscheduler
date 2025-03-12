@@ -1,0 +1,58 @@
+<!-- Copy this code into your Wix HTML Component -->
+<style>
+    .render-calendar-container {
+        position: relative;
+        width: 100%;
+        overflow: hidden;
+        height: 600px; /* Default height for desktop */
+        margin: 0 auto;
+        max-width: 500px; /* Maximum width for larger screens */
+    }
+    
+    .render-calendar-container iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border: none;
+        background: transparent;
+    }
+    
+    @media only screen and (max-width: 767px) {
+        .render-calendar-container {
+            height: 550px; /* Slightly adjusted height for mobile */
+        }
+        
+        .render-calendar-container iframe {
+            width: 100%;
+            transform-origin: top center;
+        }
+    }
+
+    /* Additional optimization for very small screens */
+    @media only screen and (max-width: 360px) {
+        .render-calendar-container {
+            height: 500px;
+        }
+    }
+</style>
+
+<div class="render-calendar-container">
+    <iframe 
+        src="YOUR_RENDER_URL?v=25" 
+        scrolling="no" 
+        allowfullscreen 
+        allow="fullscreen"
+        title="Schedule a Call"
+    ></iframe>
+</div>
+
+<!-- Instructions:
+1. Replace YOUR_RENDER_URL with your actual Render.com URL
+2. In the Wix Editor:
+   - Set the HTML Component to 100% width
+   - Remove any additional padding/margins from the component
+   - Ensure the section containing this component is set to full width
+3. The ?v=25 parameter ensures you get the latest version - update this number when you make changes
+--> 
