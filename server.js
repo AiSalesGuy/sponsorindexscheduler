@@ -170,41 +170,9 @@ app.post('/api/schedule', async (req, res) => {
             });
         }
 
-        // Extract newsletter name and ensure it's not a full URL
-        let newsletterName = urlSlug || 'direct_access';
-        
-        // If it's a URL or contains slashes, extract the newsletter name
-        if (newsletterName.includes('://') || newsletterName.includes('/')) {
-            try {
-                // If it's a full URL, parse it
-                if (newsletterName.includes('://')) {
-                    const url = new URL(newsletterName);
-                    newsletterName = url.pathname;
-                }
-                
-                // Split the path and get the last meaningful segment
-                const segments = newsletterName.split('/').filter(Boolean);
-                if (segments.length > 0) {
-                    // Get the last segment, ignoring 'top-newsletters' if it's present
-                    newsletterName = segments[segments.length - 1];
-                    
-                    // If we got 'top-newsletters', but there's a segment before it, use that
-                    if (newsletterName === 'top-newsletters' && segments.length > 1) {
-                        newsletterName = segments[segments.length - 2];
-                    }
-                } else {
-                    newsletterName = 'direct_access';
-                }
-            } catch (e) {
-                console.error('Error extracting newsletter name:', e);
-                newsletterName = 'direct_access';
-            }
-        }
-
-        // Only clean up characters that would cause issues, preserve meaningful ones
-        newsletterName = newsletterName.trim();
-        
-        console.log('Final newsletter name:', newsletterName);
+        // Simply use the urlSlug as is, with a fallback to direct_access
+        const newsletterName = urlSlug || 'direct_access';
+        console.log('Using newsletter name:', newsletterName);
 
         const query = `
             INSERT INTO schedules 
@@ -221,7 +189,7 @@ app.post('/api/schedule', async (req, res) => {
             email,
             parseInt(budget, 10),
             campaignGoals,
-            newsletterName // Use the cleaned newsletter name
+            newsletterName
         ];
 
         const result = await client.query(query, values);
