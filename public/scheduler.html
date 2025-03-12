@@ -296,6 +296,65 @@
             urlSlug: ""
         };
 
+        let pathRequestAttempts = 0;
+        const MAX_PATH_REQUESTS = 3;
+        let pathRequestTimeout;
+
+        // Listen for messages from parent window
+        window.addEventListener('message', function(event) {
+            console.log('Received message:', event.data, 'from origin:', event.origin);
+            
+            // Accept messages from any origin since we're in an iframe
+            if (event.data && event.data.newsletterPath) {
+                clearTimeout(pathRequestTimeout);
+                formData.urlSlug = event.data.newsletterPath;
+                console.log('Successfully set newsletter path:', formData.urlSlug);
+            }
+        });
+
+        // Request newsletter path from parent with retry logic
+        function requestNewsletterPath() {
+            if (formData.urlSlug) {
+                console.log('Newsletter path already set:', formData.urlSlug);
+                return;
+            }
+
+            if (pathRequestAttempts >= MAX_PATH_REQUESTS) {
+                console.log('Max request attempts reached, using default path');
+                formData.urlSlug = 'direct_access';
+                return;
+            }
+
+            console.log('Requesting newsletter path from parent, attempt:', pathRequestAttempts + 1);
+            
+            // Send request to parent
+            window.parent.postMessage({ 
+                type: 'REQUEST_NEWSLETTER_PATH',
+                attempt: pathRequestAttempts + 1
+            }, '*');
+
+            pathRequestAttempts++;
+
+            // Set timeout for retry
+            pathRequestTimeout = setTimeout(() => {
+                console.log('No response received, retrying...');
+                requestNewsletterPath();
+            }, 1000); // Retry after 1 second
+        }
+
+        // Start requesting newsletter path immediately
+        requestNewsletterPath();
+
+        // Also request on load in case the first request was too early
+        window.addEventListener('load', function() {
+            console.log('Page loaded, checking newsletter path status...');
+            if (!formData.urlSlug) {
+                console.log('No newsletter path set yet, requesting again...');
+                pathRequestAttempts = 0; // Reset attempts
+                requestNewsletterPath();
+            }
+        });
+
         // Generate time slots
         function generateTimeSlots() {
             const timeGrid = document.getElementById('timeGrid');
@@ -409,67 +468,23 @@
             formData.budget = document.getElementById('budget').value;
             formData.campaignGoals = document.getElementById('campaignGoals').value;
 
-            // Functions to get page name from different sources
-            function getPageFromParams() {
-                const urlParams = new URLSearchParams(window.location.search);
-                const pageSlug = urlParams.get('page');
-                console.log('URL parameters:', Object.fromEntries(urlParams.entries()));
-                return pageSlug;
-            }
-
-            function getPageFromReferrer() {
-                const referrer = document.referrer;
-                console.log('Referrer URL:', referrer);
+            // Make one final attempt to get the newsletter path if we don't have it
+            if (!formData.urlSlug) {
+                console.log('No newsletter path set before submission, making final request...');
+                // Reset attempts for final try
+                pathRequestAttempts = 0;
+                requestNewsletterPath();
                 
-                if (!referrer) {
-                    console.log('No referrer URL available');
-                    return null;
-                }
-
-                try {
-                    const referrerUrl = new URL(referrer);
-                    console.log('Parsed referrer path:', referrerUrl.pathname);
-                    
-                    const match = referrerUrl.pathname.match(/\/top-newsletters\/([^/?#]+)/);
-                    if (match && match[1]) {
-                        return match[1];
-                    }
-                    console.log('No newsletter path found in referrer URL');
-                    return null;
-                } catch (e) {
-                    console.error('Error parsing referrer URL:', e);
-                    return null;
-                }
-            }
-
-            // Try to get the page name from different sources
-            try {
-                console.log('Starting page name extraction process...');
+                // Wait briefly for a response
+                await new Promise(resolve => setTimeout(resolve, 500));
                 
-                // First try URL parameters
-                const pageFromParams = getPageFromParams();
-                if (pageFromParams) {
-                    formData.urlSlug = pageFromParams;
-                    console.log('Successfully got page name from URL parameters:', formData.urlSlug);
-                } else {
-                    console.log('No page name in URL parameters, trying referrer...');
-                    
-                    // Then try referrer
-                    const pageFromReferrer = getPageFromReferrer();
-                    if (pageFromReferrer) {
-                        formData.urlSlug = pageFromReferrer;
-                        console.log('Successfully got page name from referrer:', formData.urlSlug);
-                    } else {
-                        console.log('Could not get page name from any source, using default');
-                        formData.urlSlug = 'direct_access';
-                    }
+                if (!formData.urlSlug) {
+                    console.log('Still no newsletter path, using default');
+                    formData.urlSlug = 'direct_access';
                 }
-            } catch (e) {
-                console.error('Error in page name extraction process:', e);
-                formData.urlSlug = 'direct_access';
             }
 
-            console.log('Final form data being submitted:', formData);
+            console.log('Submitting form with final data:', formData);
             
             try {
                 const response = await fetch('https://sponsorindexscheduler-2.onrender.com/api/schedule', {
