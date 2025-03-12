@@ -2,58 +2,51 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Schedule a Call</title>
     <meta name="version" content="1.0.1">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <style>
-        body {
-            font-family: Arial, sans-serif;
+        * {
             margin: 0;
-            padding: 20px;
-            background-color: #f5f5f5;
-            min-height: 100vh;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: transparent;
+            font-family: Arial, sans-serif;
         }
 
         .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background-color: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .page {
-            display: none;
-            opacity: 0;
-            transition: opacity 0.3s ease-in-out;
-        }
-
-        .page.active {
-            display: block;
-            opacity: 1;
-        }
-
-        #page1 {
-            display: block;
-            opacity: 1;
+            height: 100%;
+            width: 100%;
+            padding: 5px;
+            background: transparent;
+            display: flex;
+            flex-direction: column;
         }
 
         .progress-bar {
+            flex: 0 0 auto;
             display: flex;
             justify-content: space-between;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
             position: relative;
-            padding: 0 15px;
+            padding: 0 10px;
         }
 
         .progress-bar::before {
             content: '';
             position: absolute;
             top: 50%;
-            left: 30px;
-            right: 30px;
+            left: 25px;
+            right: 25px;
             height: 2px;
             background-color: #ddd;
             transform: translateY(-50%);
@@ -61,8 +54,8 @@
         }
 
         .step {
-            width: 30px;
-            height: 30px;
+            width: 20px;
+            height: 20px;
             border-radius: 50%;
             background-color: #ddd;
             display: flex;
@@ -72,6 +65,7 @@
             position: relative;
             z-index: 2;
             transition: background-color 0.3s ease;
+            font-size: 11px;
         }
 
         .step.active {
@@ -79,21 +73,51 @@
             color: white;
         }
 
+        .page {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+            height: calc(100% - 30px);
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .page.active {
+            display: flex;
+            flex-direction: column;
+            opacity: 1;
+        }
+
+        h2 {
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: #333;
+            flex: 0 0 auto;
+        }
+
+        #calendar {
+            flex: 1 1 auto;
+            min-height: 300px;
+            margin-bottom: 10px;
+        }
+
         .time-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-            gap: 10px;
-            margin: 20px 0;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 5px;
+            margin: 10px 0;
         }
 
         .time-button {
-            padding: 10px;
+            padding: 6px;
             border: 1px solid #ddd;
             background-color: white;
             border-radius: 4px;
             cursor: pointer;
             transition: all 0.2s ease;
-            font-size: 14px;
+            font-size: 12px;
+            white-space: nowrap;
+            text-align: center;
         }
 
         .time-button:hover {
@@ -108,14 +132,15 @@
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 10px;
         }
 
         label {
             display: block;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
             font-weight: bold;
             color: #333;
+            font-size: 12px;
         }
 
         input[type="text"],
@@ -123,39 +148,35 @@
         input[type="number"],
         textarea {
             width: 100%;
-            padding: 10px;
+            padding: 6px;
             border: 1px solid #ddd;
             border-radius: 4px;
-            box-sizing: border-box;
-            font-size: 16px;
+            font-size: 12px;
             transition: border-color 0.2s ease;
         }
 
-        input:focus,
-        textarea:focus {
-            outline: none;
-            border-color: #20B2AA;
-        }
-
         textarea {
-            height: 120px;
-            resize: vertical;
+            height: 80px;
+            resize: none;
         }
 
         .button-group {
             display: flex;
             justify-content: space-between;
-            margin-top: 30px;
+            gap: 8px;
+            margin-top: 10px;
+            flex: 0 0 auto;
         }
 
         button {
-            padding: 12px 24px;
+            flex: 1;
+            padding: 8px;
             border: none;
             border-radius: 4px;
             cursor: pointer;
             font-weight: bold;
-            font-size: 16px;
-            transition: all 0.2s ease;
+            font-size: 12px;
+            transition: opacity 0.2s ease;
         }
 
         button.next {
@@ -168,45 +189,53 @@
             color: white;
         }
 
-        button:hover {
-            opacity: 0.9;
-            transform: translateY(-1px);
+        /* Calendar customization */
+        .flatpickr-calendar {
+            width: 100% !important;
+            max-width: 100% !important;
+            box-shadow: none !important;
+            border: none !important;
+            background: transparent !important;
         }
 
-        button:active {
-            transform: translateY(0);
+        .flatpickr-months {
+            padding-top: 0 !important;
+        }
+
+        .flatpickr-month {
+            height: 36px !important;
+        }
+
+        .flatpickr-current-month {
+            padding-top: 0 !important;
+            font-size: 14px !important;
+        }
+
+        .flatpickr-weekday {
+            font-size: 12px !important;
+        }
+
+        .flatpickr-day {
+            font-size: 12px !important;
+            line-height: 30px !important;
+            height: 30px !important;
+            max-height: 30px !important;
         }
 
         .version-info {
-            position: fixed;
-            bottom: 5px;
-            right: 5px;
-            font-size: 10px;
-            color: #666;
-            background: rgba(255,255,255,0.8);
-            padding: 2px 5px;
-            border-radius: 3px;
+            display: none;
         }
 
-        /* Calendar customization */
-        .flatpickr-calendar {
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
-            border-radius: 8px !important;
+        /* Hide flatpickr elements we don't need */
+        .flatpickr-time {
+            display: none !important;
         }
 
-        .flatpickr-day.selected {
-            background: #20B2AA !important;
-            border-color: #20B2AA !important;
-        }
-
-        .flatpickr-day:hover {
-            background: #e6f7f7 !important;
-        }
-
-        h2 {
-            color: #333;
-            margin-bottom: 20px;
-            font-size: 24px;
+        /* Ensure content is always visible */
+        @supports (-webkit-touch-callout: none) {
+            .page {
+                height: -webkit-fill-available;
+            }
         }
     </style>
 </head>
