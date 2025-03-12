@@ -131,7 +131,6 @@ app.get('/api/schedules', async (req, res) => {
 
 app.post('/api/schedule', async (req, res) => {
     console.log('Received scheduling request with body:', JSON.stringify(req.body, null, 2));
-    console.log('Request headers:', req.headers);
 
     if (!req.body || Object.keys(req.body).length === 0) {
         console.error('Empty request body received');
@@ -171,11 +170,24 @@ app.post('/api/schedule', async (req, res) => {
             });
         }
 
-        // Log the URL we received
-        console.log('Received URL:', urlSlug);
+        // Extract newsletter name and ensure it's not a full URL
+        let newsletterName = urlSlug || 'direct_access';
+        
+        // If it's a URL, extract just the last path segment
+        if (newsletterName.includes('://')) {
+            try {
+                const url = new URL(newsletterName);
+                const pathSegments = url.pathname.split('/').filter(Boolean);
+                newsletterName = pathSegments[pathSegments.length - 1] || 'direct_access';
+            } catch (e) {
+                console.error('Error parsing URL:', e);
+            }
+        }
 
-        // Use the URL as is, or a default if none provided
-        const finalUrl = urlSlug || 'direct_access';
+        // Remove any remaining slashes or URL artifacts
+        newsletterName = newsletterName.replace(/[\/\\]/g, '');
+        
+        console.log('Final newsletter name:', newsletterName);
 
         const query = `
             INSERT INTO schedules 
@@ -192,23 +204,19 @@ app.post('/api/schedule', async (req, res) => {
             email,
             parseInt(budget, 10),
             campaignGoals,
-            finalUrl
+            newsletterName // Use the cleaned newsletter name
         ];
 
-        console.log('Executing query with values:', JSON.stringify(values, null, 2));
         const result = await client.query(query, values);
-        console.log('Query executed successfully. Result:', JSON.stringify(result.rows[0], null, 2));
-
+        
         const response = {
             success: true,
             message: 'Scheduling saved successfully',
             data: result.rows[0]
         };
-        console.log('Sending response:', JSON.stringify(response, null, 2));
         res.status(201).json(response);
     } catch (error) {
         console.error('Error in /api/schedule:', error);
-        console.error('Error stack:', error.stack);
         res.status(500).json({
             success: false,
             error: error.message || 'Error saving scheduling',
@@ -216,7 +224,6 @@ app.post('/api/schedule', async (req, res) => {
         });
     } finally {
         if (client) {
-            console.log('Releasing database connection');
             client.release();
         }
     }
