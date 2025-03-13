@@ -1,547 +1,541 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Schedule a Call</title>
-    <meta name="version" content="1.0.1">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        html, body {
-            width: 320px; /* Fixed width for smallest phones */
-            height: 480px; /* Fixed height */
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            background: transparent;
-            font-family: Arial, sans-serif;
-        }
-
-        .container {
-            width: 100%;
-            height: 100%;
-            padding: 5px;
-            background: transparent;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .progress-bar {
-            flex: 0 0 auto;
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 8px;
-            position: relative;
-            padding: 0 5px;
-        }
-
-        .progress-bar::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 20px;
-            right: 20px;
-            height: 2px;
-            background-color: #ddd;
-            transform: translateY(-50%);
-            z-index: 1;
-        }
-
-        .step {
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background-color: #ddd;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            position: relative;
-            z-index: 2;
-            transition: background-color 0.3s ease;
-            font-size: 10px;
-        }
-
-        .step.active {
-            background-color: #20B2AA;
-            color: white;
-        }
-
-        .page {
-            display: none;
-            opacity: 0;
-            transition: opacity 0.3s ease-in-out;
-            height: calc(100% - 26px);
-            overflow: hidden;
-        }
-
-        .page.active {
-            display: flex;
-            flex-direction: column;
-            opacity: 1;
-        }
-
-        h2 {
-            font-size: 14px;
-            margin-bottom: 8px;
-            color: #333;
-            flex: 0 0 auto;
-        }
-
-        #calendar {
-            flex: 1 1 auto;
-            min-height: 280px;
-            margin-bottom: 8px;
-        }
-
-        .time-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
-            gap: 4px;
-            margin: 8px 0;
-            max-height: 320px;
-            overflow-y: auto;
-        }
-
-        .time-button {
-            padding: 5px;
-            border: 1px solid #ddd;
-            background-color: white;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            font-size: 11px;
-            white-space: nowrap;
-            text-align: center;
-        }
-
-        .time-button:hover {
-            background-color: #f0f0f0;
-            border-color: #20B2AA;
-        }
-
-        .time-button.selected {
-            background-color: #20B2AA;
-            color: white;
-            border-color: #188F89;
-        }
-
-        .form-group {
-            margin-bottom: 8px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 3px;
-            font-weight: bold;
-            color: #333;
-            font-size: 11px;
-        }
-
-        input[type="text"],
-        input[type="email"],
-        input[type="number"],
-        textarea {
-            width: 100%;
-            padding: 5px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 11px;
-        }
-
-        textarea {
-            height: 60px;
-            resize: none;
-        }
-
-        .button-group {
-            display: flex;
-            justify-content: space-between;
-            gap: 6px;
-            margin-top: 8px;
-            flex: 0 0 auto;
-        }
-
-        button {
-            flex: 1;
-            padding: 6px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 11px;
-            transition: opacity 0.2s ease;
-        }
-
-        button.next {
-            background-color: #20B2AA;
-            color: white;
-        }
-
-        button.prev {
-            background-color: #6c757d;
-            color: white;
-        }
-
-        /* Calendar customization */
-        .flatpickr-calendar {
-            width: 100% !important;
-            max-width: 310px !important;
-            box-shadow: none !important;
-            border: none !important;
-            background: transparent !important;
-            padding: 0 !important;
-        }
-
-        .flatpickr-months {
-            padding: 0 !important;
-            height: 28px !important;
-        }
-
-        .flatpickr-month {
-            height: 28px !important;
-        }
-
-        .flatpickr-current-month {
-            padding: 0 !important;
-            font-size: 13px !important;
-            height: 28px !important;
-        }
-
-        .flatpickr-weekdays {
-            height: 20px !important;
-            padding: 0 !important;
-        }
-
-        .flatpickr-weekday {
-            font-size: 11px !important;
-            height: 20px !important;
-            line-height: 20px !important;
-        }
-
-        .flatpickr-days {
-            padding: 0 !important;
-        }
-
-        .flatpickr-day {
-            font-size: 11px !important;
-            line-height: 24px !important;
-            height: 24px !important;
-            max-height: 24px !important;
-            margin: 1px !important;
-        }
-
-        .flatpickr-day.selected {
-            background: #20B2AA !important;
-            border-color: #20B2AA !important;
-        }
-
-        .flatpickr-day:hover {
-            background: #e6f7f7 !important;
-        }
-
-        /* Hide unnecessary elements */
-        .version-info,
-        .flatpickr-time {
-            display: none !important;
-        }
-
-        /* Remove all backgrounds */
-        .flatpickr-calendar,
-        .flatpickr-months,
-        .flatpickr-month,
-        .flatpickr-weekdays,
-        .dayContainer {
-            background: transparent !important;
-        }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sponsor Index Scheduler</title>
 </head>
 <body>
-    <div class="version-info">v1.0.1</div>
-    
-    <div class="container">
-        <div class="progress-bar">
-            <div class="step active">1</div>
-            <div class="step">2</div>
-            <div class="step">3</div>
-        </div>
-
-        <form id="contactForm">
-            <div id="page1" class="page active">
-                <h2>Select a Date</h2>
-                <div id="calendar"></div>
-                <div class="button-group">
-                    <div></div>
-                    <button type="button" class="next" onclick="nextPage(1)">Next</button>
-                </div>
-            </div>
-
-            <div id="page2" class="page">
-                <h2>Select a Time</h2>
-                <div id="timeGrid" class="time-grid"></div>
-                <div class="button-group">
-                    <button type="button" class="prev" onclick="previousPage(2)">Previous</button>
-                    <button type="button" class="next" onclick="nextPage(2)">Next</button>
-                </div>
-            </div>
-
-            <div id="page3" class="page">
-                <h2>Your Information</h2>
-                <div class="form-group">
-                    <label for="name">Name:</label>
-                    <input type="text" id="name" required>
-                </div>
-                <div class="form-group">
-                    <label for="email">Email:</label>
-                    <input type="email" id="email" required>
-                </div>
-                <div class="form-group">
-                    <label for="budget">Budget (USD):</label>
-                    <input type="number" id="budget" required min="0">
-                </div>
-                <div class="form-group">
-                    <label for="campaignGoals">Campaign Goals:</label>
-                    <textarea id="campaignGoals" required></textarea>
-                </div>
-                <div class="button-group">
-                    <button type="button" class="prev" onclick="previousPage(3)">Previous</button>
-                    <button type="submit" class="next">Schedule Call</button>
-                </div>
-            </div>
-        </form>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <sponsor-scheduler></sponsor-scheduler>
     <script>
-        console.log('Scheduler Version 1.0.1 loaded');
-        console.log('Load timestamp:', new Date().toISOString());
-        console.log('Window location:', window.location.href);
-        console.log('URL search params:', window.location.search);
+        // Our working simplified scheduler code
+        class SponsorScheduler extends HTMLElement {
+            static get observedAttributes() {
+                return ['newsletter'];
+            }
 
-        // Get newsletter name from URL parameters
-        let newsletter = 'direct_access';
-        try {
-            const urlParams = new URLSearchParams(window.location.search);
-            const newsletterParam = urlParams.get('newsletter');
-            console.log('Newsletter parameter received:', newsletterParam);
-            
-            if (newsletterParam && newsletterParam.trim() !== '') {
-                // Clean up the newsletter name
-                newsletter = newsletterParam.trim();
+            constructor() {
+                super();
+                this._newsletter = 'direct_access';
+                this._formData = {
+                    date: "",
+                    time: "",
+                    time12Hour: "",
+                    name: "",
+                    email: "",
+                    budget: "",
+                    campaignGoals: "",
+                    urlSlug: this._newsletter
+                };
+                this._selectedDate = null;
+                this._currentMonth = new Date();
+            }
+
+            connectedCallback() {
+                this.render();
+                this.setupEventListeners();
+            }
+
+            render() {
+                const styles = `
+                    <style>
+                        .scheduler-container {
+                            width: 100%;
+                            max-width: 320px;
+                            margin: 0 auto;
+                            font-family: Arial, sans-serif;
+                            background: white;
+                            padding: 15px;
+                            box-sizing: border-box;
+                        }
+                        .progress-bar {
+                            display: flex;
+                            justify-content: space-between;
+                            margin-bottom: 20px;
+                            position: relative;
+                            padding: 0 15px;
+                        }
+                        .progress-bar::before {
+                            content: '';
+                            position: absolute;
+                            top: 50%;
+                            left: 25px;
+                            right: 25px;
+                            height: 2px;
+                            background-color: #ddd;
+                            transform: translateY(-50%);
+                            z-index: 1;
+                        }
+                        .step {
+                            width: 24px;
+                            height: 24px;
+                            border-radius: 50%;
+                            background-color: #ddd;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            font-weight: bold;
+                            position: relative;
+                            z-index: 2;
+                            color: white;
+                        }
+                        .step.active {
+                            background-color: #20B2AA;
+                        }
+                        .calendar {
+                            width: 100%;
+                            border: 1px solid #ddd;
+                            border-radius: 8px;
+                            overflow: hidden;
+                            background: white;
+                        }
+                        .calendar-header {
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                            padding: 10px;
+                            background: #f8f8f8;
+                        }
+                        .calendar-grid {
+                            display: grid;
+                            grid-template-columns: repeat(7, 1fr);
+                            gap: 1px;
+                            background: #f0f0f0;
+                        }
+                        .calendar-day {
+                            aspect-ratio: 1;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            background: white;
+                            cursor: pointer;
+                            border: none;
+                            font-size: 14px;
+                        }
+                        .calendar-day:hover:not(.disabled) {
+                            background: #f0f0f0;
+                        }
+                        .calendar-day.selected {
+                            background: #20B2AA;
+                            color: white;
+                        }
+                        .calendar-day.disabled {
+                            color: #ccc;
+                            cursor: not-allowed;
+                        }
+                        .calendar-day.today {
+                            font-weight: bold;
+                        }
+                        .weekday {
+                            text-align: center;
+                            padding: 5px;
+                            font-weight: bold;
+                            background: white;
+                        }
+                        .nav-button {
+                            background: none;
+                            border: none;
+                            cursor: pointer;
+                            padding: 5px 10px;
+                            font-size: 16px;
+                        }
+                        .page {
+                            display: none;
+                        }
+                        .page.active {
+                            display: block;
+                        }
+                        .time-grid {
+                            display: grid;
+                            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+                            gap: 5px;
+                            margin: 10px 0;
+                        }
+                        .time-button {
+                            padding: 8px 5px;
+                            border: 1px solid #ddd;
+                            border-radius: 4px;
+                            cursor: pointer;
+                            font-size: 12px;
+                            text-align: center;
+                            background: white;
+                        }
+                        .time-button.selected {
+                            background: #20B2AA;
+                            color: white;
+                        }
+                        .form-group {
+                            margin-bottom: 15px;
+                        }
+                        label {
+                            display: block;
+                            margin-bottom: 5px;
+                            font-weight: bold;
+                        }
+                        input, textarea {
+                            width: 100%;
+                            padding: 8px;
+                            border: 1px solid #ddd;
+                            border-radius: 4px;
+                            box-sizing: border-box;
+                        }
+                        .button-group {
+                            display: flex;
+                            justify-content: space-between;
+                            margin-top: 20px;
+                        }
+                        button {
+                            padding: 8px 16px;
+                            border: none;
+                            border-radius: 4px;
+                            cursor: pointer;
+                        }
+                        button.next {
+                            background: #20B2AA;
+                            color: white;
+                        }
+                        button.prev {
+                            background: #6c757d;
+                            color: white;
+                        }
+                        h2 {
+                            font-size: 16px;
+                            margin-bottom: 15px;
+                            color: #333;
+                        }
+                    </style>
+                `;
+
+                this.innerHTML = `
+                    ${styles}
+                    <div class="scheduler-container">
+                        <div class="progress-bar">
+                            <div class="step active">1</div>
+                            <div class="step">2</div>
+                            <div class="step">3</div>
+                        </div>
+
+                        <form id="schedulerForm">
+                            <div id="page1" class="page active">
+                                <h2>Select a Date</h2>
+                                <div class="calendar">
+                                    <div class="calendar-header">
+                                        <button type="button" class="nav-button prev-month">&lt;</button>
+                                        <span class="current-month"></span>
+                                        <button type="button" class="nav-button next-month">&gt;</button>
+                                    </div>
+                                    <div class="calendar-grid">
+                                        <div class="weekday">Sun</div>
+                                        <div class="weekday">Mon</div>
+                                        <div class="weekday">Tue</div>
+                                        <div class="weekday">Wed</div>
+                                        <div class="weekday">Thu</div>
+                                        <div class="weekday">Fri</div>
+                                        <div class="weekday">Sat</div>
+                                    </div>
+                                </div>
+                                <div class="button-group">
+                                    <div></div>
+                                    <button type="button" class="next">Next</button>
+                                </div>
+                            </div>
+
+                            <div id="page2" class="page">
+                                <h2>Select a Time</h2>
+                                <div id="timeGrid" class="time-grid"></div>
+                                <div class="button-group">
+                                    <button type="button" class="prev">Previous</button>
+                                    <button type="button" class="next">Next</button>
+                                </div>
+                            </div>
+
+                            <div id="page3" class="page">
+                                <h2>Your Information</h2>
+                                <div class="form-group">
+                                    <label for="name">Name:</label>
+                                    <input type="text" id="name" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="email">Email:</label>
+                                    <input type="email" id="email" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="budget">Budget (USD):</label>
+                                    <input type="number" id="budget" required min="0">
+                                </div>
+                                <div class="form-group">
+                                    <label for="campaignGoals">Campaign Goals:</label>
+                                    <textarea id="campaignGoals" required></textarea>
+                                </div>
+                                <div class="button-group">
+                                    <button type="button" class="prev">Previous</button>
+                                    <button type="submit" class="next">Schedule Call</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                `;
+
+                this.renderCalendar();
+                this.generateTimeSlots();
+            }
+
+            renderCalendar() {
+                const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                    'July', 'August', 'September', 'October', 'November', 'December'];
                 
-                // If it's a URL or contains domain, use default
-                if (newsletter.includes('sponsorindex.com') || 
-                    newsletter.includes('http://') || 
-                    newsletter.includes('https://') ||
-                    newsletter.includes('www.')) {
-                    newsletter = 'direct_access';
-                    console.log('Newsletter parameter was a URL, using default');
-                } else {
-                    console.log('Using clean newsletter name:', newsletter);
+                const currentMonthDisplay = this.querySelector('.current-month');
+                currentMonthDisplay.textContent = `${monthNames[this._currentMonth.getMonth()]} ${this._currentMonth.getFullYear()}`;
+
+                const calendarGrid = this.querySelector('.calendar-grid');
+                const today = new Date();
+                const firstDay = new Date(this._currentMonth.getFullYear(), this._currentMonth.getMonth(), 1);
+                const lastDay = new Date(this._currentMonth.getFullYear(), this._currentMonth.getMonth() + 1, 0);
+
+                // Keep weekday headers
+                const weekdayHeaders = Array.from(calendarGrid.querySelectorAll('.weekday'));
+                calendarGrid.innerHTML = '';
+                weekdayHeaders.forEach(header => calendarGrid.appendChild(header));
+
+                // Fill in empty days from previous month
+                let firstDayOfWeek = firstDay.getDay();
+                for (let i = 0; i < firstDayOfWeek; i++) {
+                    const emptyDay = document.createElement('button');
+                    emptyDay.className = 'calendar-day disabled';
+                    emptyDay.disabled = true;
+                    calendarGrid.appendChild(emptyDay);
                 }
-            } else {
-                console.log('No newsletter parameter found, using default');
-            }
-        } catch (e) {
-            console.error('Error getting newsletter parameter:', e);
-        }
 
-        let formData = {
-            date: "",
-            time: "",
-            time12Hour: "",
-            name: "",
-            email: "",
-            budget: "",
-            campaignGoals: "",
-            urlSlug: newsletter
-        };
-        console.log('Initial formData:', JSON.stringify(formData, null, 2));
+                // Fill in days of current month
+                for (let day = 1; day <= lastDay.getDate(); day++) {
+                    const date = new Date(this._currentMonth.getFullYear(), this._currentMonth.getMonth(), day);
+                    const dayButton = document.createElement('button');
+                    dayButton.type = 'button';
+                    dayButton.className = 'calendar-day';
+                    dayButton.textContent = day;
 
-        // Initialize calendar
-        const calendar = flatpickr("#calendar", {
-            inline: true,
-            dateFormat: "Y-m-d",
-            minDate: "today",
-            disable: [
-                function(date) {
-                    // Disable weekends
-                    return (date.getDay() === 0 || date.getDay() === 6);
-                }
-            ]
-        });
-
-        // Generate time slots
-        function generateTimeSlots() {
-            const timeGrid = document.getElementById('timeGrid');
-            timeGrid.innerHTML = ''; // Clear existing slots
-            const startHour = 9; // 9 AM
-            const endHour = 17; // 5 PM
-            
-            for (let hour = startHour; hour < endHour; hour++) {
-                for (let minute = 0; minute < 60; minute += 30) {
-                    const hour12 = hour > 12 ? hour - 12 : hour;
-                    const ampm = hour >= 12 ? 'PM' : 'AM';
-                    const timeString = `${hour12}:${minute.toString().padStart(2, '0')} ${ampm}`;
-                    const hour24 = hour.toString().padStart(2, '0');
-                    const minute24 = minute.toString().padStart(2, '0');
-                    
-                    const button = document.createElement('button');
-                    button.type = 'button';
-                    button.className = 'time-button';
-                    button.textContent = timeString;
-                    button.dataset.time = `${hour24}:${minute24}`;
-                    button.dataset.time12 = timeString;
-                    
-                    button.addEventListener('click', selectTime);
-                    timeGrid.appendChild(button);
-                }
-            }
-        }
-
-        // Handle time selection
-        function selectTime(e) {
-            document.querySelectorAll('.time-button').forEach(btn => {
-                btn.classList.remove('selected');
-            });
-            e.target.classList.add('selected');
-            formData.time = e.target.dataset.time;
-            formData.time12Hour = e.target.dataset.time12;
-        }
-
-        // Generate time slots when page loads
-        generateTimeSlots();
-
-        // Navigation functions
-        function nextPage(currentPage) {
-            if (!validatePage(currentPage)) return;
-            
-            document.querySelectorAll('.page').forEach(page => {
-                page.classList.remove('active');
-                page.style.display = 'none';
-            });
-            
-            const nextPageElement = document.getElementById(`page${currentPage + 1}`);
-            nextPageElement.style.display = 'block';
-            setTimeout(() => {
-                nextPageElement.classList.add('active');
-            }, 50);
-            
-            updateProgress(currentPage + 1);
-        }
-
-        function previousPage(currentPage) {
-            document.querySelectorAll('.page').forEach(page => {
-                page.classList.remove('active');
-                page.style.display = 'none';
-            });
-            
-            const prevPageElement = document.getElementById(`page${currentPage - 1}`);
-            prevPageElement.style.display = 'block';
-            setTimeout(() => {
-                prevPageElement.classList.add('active');
-            }, 50);
-            
-            updateProgress(currentPage - 1);
-        }
-
-        function updateProgress(currentPage) {
-            document.querySelectorAll('.step').forEach((step, index) => {
-                if (index + 1 <= currentPage) {
-                    step.classList.add('active');
-                } else {
-                    step.classList.remove('active');
-                }
-            });
-        }
-
-        function validatePage(pageNumber) {
-            switch(pageNumber) {
-                case 1:
-                    if (!calendar.selectedDates[0]) {
-                        alert("Please select a date");
-                        return false;
+                    // Disable weekends and past dates
+                    const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+                    const isPast = date < new Date().setHours(0,0,0,0);
+                    if (isWeekend || isPast) {
+                        dayButton.classList.add('disabled');
+                        dayButton.disabled = true;
+                    } else {
+                        dayButton.addEventListener('click', () => this.selectDate(date));
                     }
-                    formData.date = calendar.selectedDates[0].toISOString().split('T')[0];
-                    return true;
-                case 2:
-                    if (!formData.time) {
-                        alert("Please select a time");
-                        return false;
+
+                    // Highlight today
+                    if (date.toDateString() === today.toDateString()) {
+                        dayButton.classList.add('today');
                     }
-                    return true;
-                default:
-                    return true;
+
+                    // Highlight selected date
+                    if (this._selectedDate && date.toDateString() === this._selectedDate.toDateString()) {
+                        dayButton.classList.add('selected');
+                    }
+
+                    calendarGrid.appendChild(dayButton);
+                }
             }
-        }
 
-        // Form submission
-        document.getElementById('contactForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            formData.name = document.getElementById('name').value;
-            formData.email = document.getElementById('email').value;
-            formData.budget = document.getElementById('budget').value;
-            formData.campaignGoals = document.getElementById('campaignGoals').value;
-            
-            // Ensure we're using the newsletter name, not a URL
-            formData.urlSlug = newsletter;
-            
-            console.log('Form submission started');
-            console.log('Newsletter value at submission:', newsletter);
-            console.log('Full formData being sent:', JSON.stringify(formData, null, 2));
-            console.log('API endpoint:', 'https://sponsorindexscheduler-2.onrender.com/api/schedule');
+            selectDate(date) {
+                this._selectedDate = date;
+                this._formData.date = date.toISOString().split('T')[0];
+                this.renderCalendar();
+            }
 
-            try {
-                const response = await fetch('https://sponsorindexscheduler-2.onrender.com/api/schedule', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(formData)
+            generateTimeSlots() {
+                const timeGrid = this.querySelector('#timeGrid');
+                const startHour = 9;
+                const endHour = 17;
+
+                timeGrid.innerHTML = '';
+                for (let hour = startHour; hour < endHour; hour++) {
+                    for (let minute = 0; minute < 60; minute += 30) {
+                        const hour12 = hour > 12 ? hour - 12 : hour;
+                        const ampm = hour >= 12 ? 'PM' : 'AM';
+                        const timeString = `${hour12}:${minute.toString().padStart(2, '0')} ${ampm}`;
+                        const hour24 = hour.toString().padStart(2, '0');
+                        const minute24 = minute.toString().padStart(2, '0');
+
+                        const button = document.createElement('button');
+                        button.type = 'button';
+                        button.className = 'time-button';
+                        button.textContent = timeString;
+                        button.dataset.time = `${hour24}:${minute24}`;
+                        button.dataset.time12 = timeString;
+                        
+                        button.addEventListener('click', (e) => {
+                            timeGrid.querySelectorAll('.time-button').forEach(btn => {
+                                btn.classList.remove('selected');
+                            });
+                            e.target.classList.add('selected');
+                            this._formData.time = e.target.dataset.time;
+                            this._formData.time12Hour = e.target.dataset.time12;
+                        });
+
+                        timeGrid.appendChild(button);
+                    }
+                }
+            }
+
+            setupEventListeners() {
+                // Navigation buttons
+                this.querySelector('.prev-month').addEventListener('click', () => {
+                    this._currentMonth.setMonth(this._currentMonth.getMonth() - 1);
+                    this.renderCalendar();
                 });
 
-                console.log('Response status:', response.status);
-                const result = await response.json();
-                console.log('API response:', JSON.stringify(result, null, 2));
-                
-                if (result.success) {
-                    alert('Appointment scheduled successfully! We will contact you soon.');
-                    document.getElementById('contactForm').reset();
-                    document.querySelectorAll('.page').forEach(page => {
-                        page.classList.remove('active');
-                        page.style.display = 'none';
+                this.querySelector('.next-month').addEventListener('click', () => {
+                    this._currentMonth.setMonth(this._currentMonth.getMonth() + 1);
+                    this.renderCalendar();
+                });
+
+                // Form navigation
+                const form = this.querySelector('#schedulerForm');
+                form.addEventListener('submit', this.handleSubmit.bind(this));
+
+                const nextButtons = this.querySelectorAll('button.next');
+                nextButtons.forEach(button => {
+                    if (button.type !== 'submit') {
+                        button.addEventListener('click', () => {
+                            const currentPage = parseInt(button.closest('.page').id.replace('page', ''));
+                            this.nextPage(currentPage);
+                        });
+                    }
+                });
+
+                const prevButtons = this.querySelectorAll('button.prev');
+                prevButtons.forEach(button => {
+                    button.addEventListener('click', () => {
+                        const currentPage = parseInt(button.closest('.page').id.replace('page', ''));
+                        this.previousPage(currentPage);
                     });
-                    const firstPage = document.getElementById('page1');
-                    firstPage.style.display = 'block';
-                    setTimeout(() => {
-                        firstPage.classList.add('active');
-                    }, 50);
-                    updateProgress(1);
-                    formData = {
-                        date: "",
-                        time: "",
-                        time12Hour: "",
-                        name: "",
-                        email: "",
-                        budget: "",
-                        campaignGoals: "",
-                        urlSlug: newsletter
-                    };
-                } else {
-                    throw new Error(result.error || 'Failed to schedule appointment');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('There was an error scheduling your appointment: ' + error.message);
+                });
             }
-        });
+
+            nextPage(currentPage) {
+                if (!this.validatePage(currentPage)) return;
+
+                this.querySelectorAll('.page').forEach(page => {
+                    page.classList.remove('active');
+                });
+
+                const nextPageElement = this.querySelector(`#page${currentPage + 1}`);
+                nextPageElement.classList.add('active');
+
+                this.updateProgress(currentPage + 1);
+            }
+
+            previousPage(currentPage) {
+                this.querySelectorAll('.page').forEach(page => {
+                    page.classList.remove('active');
+                });
+
+                const prevPageElement = this.querySelector(`#page${currentPage - 1}`);
+                prevPageElement.classList.add('active');
+
+                this.updateProgress(currentPage - 1);
+            }
+
+            updateProgress(currentPage) {
+                this.querySelectorAll('.step').forEach((step, index) => {
+                    if (index + 1 <= currentPage) {
+                        step.classList.add('active');
+                    } else {
+                        step.classList.remove('active');
+                    }
+                });
+            }
+
+            validatePage(pageNumber) {
+                switch(pageNumber) {
+                    case 1:
+                        if (!this._formData.date) {
+                            alert("Please select a date");
+                            return false;
+                        }
+                        return true;
+                    case 2:
+                        if (!this._formData.time) {
+                            alert("Please select a time");
+                            return false;
+                        }
+                        return true;
+                    default:
+                        return true;
+                }
+            }
+
+            async handleSubmit(e) {
+                e.preventDefault();
+
+                this._formData.name = this.querySelector('#name').value;
+                this._formData.email = this.querySelector('#email').value;
+                this._formData.budget = this.querySelector('#budget').value;
+                this._formData.campaignGoals = this.querySelector('#campaignGoals').value;
+
+                try {
+                    const response = await fetch('https://sponsorindexscheduler-2.onrender.com/api/schedule', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(this._formData)
+                    });
+
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        alert('Appointment scheduled successfully! We will contact you soon.');
+                        this.resetForm();
+                    } else {
+                        throw new Error(result.error || 'Failed to schedule appointment');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('There was an error scheduling your appointment: ' + error.message);
+                }
+            }
+
+            resetForm() {
+                const form = this.querySelector('#schedulerForm');
+                form.reset();
+
+                this.querySelectorAll('.page').forEach(page => {
+                    page.classList.remove('active');
+                });
+
+                const firstPage = this.querySelector('#page1');
+                firstPage.classList.add('active');
+
+                this.updateProgress(1);
+
+                const newsletter = this._formData.urlSlug;
+                this._formData = {
+                    date: "",
+                    time: "",
+                    time12Hour: "",
+                    name: "",
+                    email: "",
+                    budget: "",
+                    campaignGoals: "",
+                    urlSlug: newsletter
+                };
+
+                this._selectedDate = null;
+                this.renderCalendar();
+            }
+
+            attributeChangedCallback(name, oldValue, newValue) {
+                if (name === 'newsletter' && oldValue !== newValue) {
+                    this._newsletter = newValue || 'direct_access';
+                    this._formData.urlSlug = this._newsletter;
+                }
+            }
+        }
+
+        customElements.define('sponsor-scheduler', SponsorScheduler);
     </script>
 </body>
 </html> 
